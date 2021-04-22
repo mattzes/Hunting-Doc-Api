@@ -1,6 +1,6 @@
 const Joi = require("joi");
 
-//Register Validation
+// * Register Validation
 const registerValidation = (data) => {
   const schema = Joi.object({
     username: Joi.string().min(6).max(32).alphanum().required(),
@@ -18,7 +18,7 @@ const registerValidation = (data) => {
   return schema.validate(data);
 };
 
-//Login Validation
+// * Login Validation
 const loginValidation = (data) => {
   const schema = Joi.object({
     username: Joi.string().min(6).alphanum().required(),
