@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const verify = require("./verifyToken");
+const { verifyAccessToken } = require("../helpers/verify");
 
-router.get("/", verify, (req, res) => {
+router.get("/", verifyAccessToken, (req, res) => {
   res.json({
     posts: { title: "this is a title", description: "this is a description" },
   });

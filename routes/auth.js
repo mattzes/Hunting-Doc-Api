@@ -33,7 +33,7 @@ router.post("/register", async (req, res) => {
   //save the user to db
   try {
     const savedUser = await user.save();
-    res.status(201).json({ userID: savedUser._id });
+    res.status(201).json({ ok: true });
   } catch (error) {
     res.status(500).send(error);
   }
@@ -55,11 +55,21 @@ router.post("/login", async (req, res) => {
     return res.status(400).send("The username or password is wrong.");
 
   //Create and assign a token
-  const token = jwt.sign(
-    { id: user._id, username: user.username },
-    process.env.TOKEN_SECRET
+  const accessToken = jwt.sign(
+    { userID: user._id },
+    process.env.ACCESS_TOKEN_SECRET
   );
-  res.header("auth-token", token).send();
+
+  res
+    .cookie("accessToken", accessToken, {
+      httpOnly: true,
+      //secure: true,
+      domain: process.env.DOMAIN,
+      path: "/api",
+      // TODOO: fixing timezoone differences
+      expires: new Date(Date.now() + 86400000), // 86400000 are 24h in milliseconds
+    })
+    .send({ ok: true });
 });
 
 module.exports = router;

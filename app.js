@@ -1,10 +1,13 @@
 const express = require("express");
-const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
 const app = express();
+const mongoose = require("mongoose");
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
 require("dotenv/config");
 
-app.use(bodyParser.json());
+const corsOptions = {
+  origin: process.env.DOMAIN,
+};
 
 // * Import Routes
 const authRoute = require("./routes/auth");
@@ -12,8 +15,10 @@ const shootingsRoute = require("./routes/shootings");
 
 // * Middleware
 app.use(express.json());
+app.use(cors(corsOptions));
+app.use(cookieParser());
 // Route Middleware
-app.use("/api/user", authRoute);
+app.use("/api/auth", authRoute);
 app.use("/api/shootings", shootingsRoute);
 
 // * Connect to DB
@@ -24,4 +29,6 @@ mongoose.connect(
 );
 
 // * START APP ON PORT 3000
-app.listen(3000, () => console.log("Server Up and running on Port 3000"));
+app.listen(process.env.PORT, () =>
+  console.log("Server Up and running on Port: " + process.env.PORT)
+);
