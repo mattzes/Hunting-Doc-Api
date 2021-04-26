@@ -4,18 +4,19 @@ const UserSchema = mongoose.Schema({
   username: {
     type: String,
     required: true,
-    min: 6,
-    max: 32,
+    minLength: 6,
+    maxLength: 32,
   },
   password: {
     type: String,
     required: true,
-    max: 1024,
+    minLength: 58,
+    maxLength: 62,
   },
   email: {
     type: String,
     required: true,
-    min: 6,
+    minLength: 6,
   },
   admin: {
     type: Boolean,
