@@ -1,9 +1,8 @@
 const mongoose = require("mongoose");
-const pointSchema = require("./genericSchema");
 
 const SchootingSchema = mongoose.Schema({
   user_id: {
-    type: ObjectId,
+    type: mongoose.Types.ObjectId,
     required: true,
     maxLength: 24,
   },
@@ -13,9 +12,8 @@ const SchootingSchema = mongoose.Schema({
   },
   gender: {
     type: String,
-    enum: ["m", "w"],
-    minLength: 1,
-    maxLength: 1,
+    enum: ["m", "w", "unknown"],
+    maxLength: 7,
   },
   weight: {
     type: Number,
@@ -24,7 +22,7 @@ const SchootingSchema = mongoose.Schema({
     type: Number,
   },
   date: {
-    type: Date,
+    type: Number,
     required: true,
   },
   hunting_ground: {
@@ -40,13 +38,13 @@ const SchootingSchema = mongoose.Schema({
     maxLength: 400,
   },
   shooting_position: {
-    type: pointSchema,
+    type: [Number],
   },
   hit_position: {
-    type: pointSchema,
+    type: [Number],
   },
   found_position: {
-    type: pointSchema,
+    type: [Number],
   },
   distance: {
     type: Number,
@@ -57,4 +55,4 @@ const SchootingSchema = mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("ShootingSchema", SchootingSchema);
+module.exports = mongoose.model("Shooting", SchootingSchema);

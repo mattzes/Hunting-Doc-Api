@@ -11,7 +11,7 @@ const corsOptions = {
 
 // * Import Routes
 const authRoute = require("./routes/auth");
-const shootingsRoute = require("./routes/shootings");
+const shootingRoute = require("./routes/shooting");
 
 // * Middleware
 app.use(express.json());
@@ -19,7 +19,7 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 // Route Middleware
 app.use("/api/auth", authRoute);
-app.use("/api/shootings", shootingsRoute);
+app.use("/api/shooting", shootingRoute);
 
 // * Connect to DB
 mongoose.connect(
