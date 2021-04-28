@@ -8,7 +8,7 @@ const shootingValidation = (data) => {
     gender: Joi.string().valid("m", "w", "unknown"),
     weight: Joi.number(),
     age: Joi.number().integer(),
-    date: Joi.date().required().timestamp(),
+    date: Joi.date().timestamp(),
     hunting_ground: Joi.string().max(64),
     raised_hide: Joi.string().max(64),
     comment: Joi.string().max(400),

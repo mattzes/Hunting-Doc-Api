@@ -39,12 +39,15 @@ const SchootingSchema = mongoose.Schema({
   },
   shooting_position: {
     type: [Number],
+    default: undefined,
   },
   hit_position: {
     type: [Number],
+    default: undefined,
   },
   found_position: {
     type: [Number],
+    default: undefined,
   },
   distance: {
     type: Number,

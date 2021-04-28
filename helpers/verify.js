@@ -8,7 +8,6 @@ const verifyAccessToken = async (req, res, next) => {
   try {
     const verified = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
     req.user = await User.findById(verified.user_id);
-    req.body.user_id = verified.user_id;
     next();
   } catch (error) {
     console.log(error);
