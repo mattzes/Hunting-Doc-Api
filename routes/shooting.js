@@ -1,10 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { verifyAccessToken, verifyAdmin } = require("../helpers/verify");
+const { verifyAccessToken } = require("../helpers/verify");
 const { shootingValidation } = require("../validations/shooting");
 const { idValidation } = require("../validations/genericValidation");
 const Shooting = require("../models/shooting");
-const { required } = require("joi");
 
 // TODO: include management for images in every route or maybe a specific route
 

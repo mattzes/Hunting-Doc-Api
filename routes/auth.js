@@ -3,7 +3,26 @@ const router = express.Router();
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { verifyRefreshToken } = require("../helpers/verify");
 const { registerValidation, loginValidation } = require("../validations/user");
+
+// * Functions
+
+//Create a jwt access token
+function createAccessToken(user) {
+  const access_token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+    expiresIn: "905s", // 15min and 5sec
+  });
+  return access_token;
+}
+
+//Create a jwt refresh token
+function createRefreshToken(user) {
+  const refresh_token = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
+    expiresIn: "30d",
+  });
+  return refresh_token;
+}
 
 // * Register User incl. validation
 router.post("/register", async (req, res) => {
@@ -42,6 +61,7 @@ router.post("/register", async (req, res) => {
 // * Login
 router.post("/login", async (req, res) => {
   //Validate the data
+  console.log(req.body);
   const { error, value } = loginValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -54,22 +74,38 @@ router.post("/login", async (req, res) => {
   if (!validPass)
     return res.status(400).send("The username or password is wrong.");
 
-  //Create and assign a token
-  const accessToken = jwt.sign(
-    { user_id: user._id },
-    process.env.ACCESS_TOKEN_SECRET
-  );
+  //Create tokens
+  var userJSON = user.toJSON();
+  delete userJSON.password;
+  delete userJSON.__v;
+  delete refresh_tokens;
+  const refresh_token = createRefreshToken(userJSON);
+  const access_token = createAccessToken(userJSON);
+
+  //Push refresh token to db
+  try {
+    user.refresh_tokens.push(refresh_token);
+    user.save();
+  } catch (error) {
+    res.status(500).json({ message: "Error while save data to DB" });
+  }
 
   res
-    .cookie("accessToken", accessToken, {
+    .cookie("refresh_token", refresh_token, {
       httpOnly: true,
-      //secure: true,
+      //secure: true, // TODO: enable secure for https only
+      domain: process.env.DOMAIN,
+      path: "/api/auth/refresh_token",
+      //expires: new Date(Date.now() + 2591995000), // 2592000000 are close to 30d in milliseconds
+    })
+    .cookie("access_token", access_token, {
+      httpOnly: true,
+      //secure: true, // TODO: enable secure for https only
       domain: process.env.DOMAIN,
       path: "/api",
-      // TODOO: fixing timezoone differences
-      expires: new Date(Date.now() + 86400000), // 86400000 are 24h in milliseconds
+      expires: new Date(Date.now() + 900000), // 900000 are 15min in milliseconds
     })
-    .send({ ok: true });
+    .json({ ok: true });
 });
 
 module.exports = router;

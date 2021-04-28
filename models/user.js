@@ -18,9 +18,13 @@ const UserSchema = mongoose.Schema({
     required: true,
     minLength: 6,
   },
-  admin: {
-    type: Boolean,
-    default: false,
+  scopes: {
+    type: [String],
+    default: undefined,
+  },
+  refresh_tokens: {
+    type: [String],
+    default: undefined,
   },
 });
 
