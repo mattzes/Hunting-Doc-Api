@@ -6,8 +6,6 @@ const jwt = require("jsonwebtoken");
 const { verifyRefreshToken } = require("../helpers/verify");
 const { registerValidation, loginValidation } = require("../validations/user");
 
-// * Functions
-
 //Create a jwt access token
 function createAccessToken(user) {
   const access_token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
@@ -85,17 +83,15 @@ router.post("/login", async (req, res) => {
 
   //Create tokens
   let userJSON = user.toJSON();
-  delete userJSON.password;
-  delete userJSON.__v;
-  delete userJSON.refresh_tokens;
+  ["refresh_tokens", "password", "__v"].forEach((e) => delete userJSON[e]);
   const refresh_token = createRefreshToken(userJSON);
   const access_token = createAccessToken(userJSON);
 
   //Check max logins on different devices
-  if (user.refresh_tokens.length == 10)
+  if (user.refresh_tokens.length >= 10)
     return res.status(403).json({ ok: false, message: "Max logins reached" });
 
-  //Push refresh token to db
+  //Push new refresh token to DB
   try {
     user.refresh_tokens.push(refresh_token);
     user.save();
@@ -158,7 +154,52 @@ router.post("/login", async (req, res) => {
 
 // * Refresh access token with refreh token
 router.post("/refresh_token", verifyRefreshToken, async (req, res) => {
-  res.send("test");
+  //Find user
+  const user = await User.findById(req.user._id);
+
+  //Create tokens
+  const current_refresh_token = req.user.refresh_token;
+  ["refresh_token", "iat", "exp"].forEach((e) => delete req.user[e]);
+  const refresh_token = createRefreshToken(req.user);
+  const access_token = createAccessToken(req.user);
+
+  //Push new refresh token to DB
+  try {
+    user.refresh_tokens.push(refresh_token);
+    user.save();
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ ok: false, message: "Error while save data to DB" });
+  }
+
+  //Delete old refresh token in DB
+  try {
+    await user.updateOne({
+      $pull: { refresh_tokens: current_refresh_token },
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ ok: false, message: "Error while save data to DB" });
+  }
+
+  //Set cookies
+  res
+    .cookie("refresh_token", refresh_token, {
+      httpOnly: true,
+      //secure: true, // TODO: enable secure for https only
+      domain: process.env.DOMAIN,
+      path: "/api/auth",
+    })
+    .cookie("access_token", access_token, {
+      httpOnly: true,
+      //secure: true, // TODO: enable secure for https only
+      domain: process.env.DOMAIN,
+      path: "/api",
+      expires: new Date(Date.now() + 899700),
+    })
+    .json({ ok: true });
 });
 
 // * Logout
@@ -194,4 +235,36 @@ router.post("/logout", verifyRefreshToken, async (req, res) => {
     .json({ ok: true });
 });
 
+// * Force logout
+router.delete("/force_logout", verifyRefreshToken, async (req, res) => {
+  //Delete all refreh tokens in DB
+  const user = await User.findById(req.user._id);
+  try {
+    await user.updateOne({
+      $set: { refresh_tokens: [] },
+    });
+  } catch (error_1) {
+    return res
+      .status(500)
+      .json({ ok: false, message: "Error while save data to DB" });
+  }
+
+  //Set cookies wich expires instantly
+  res
+    .cookie("refresh_token", "", {
+      httpOnly: true,
+      //secure: true, // TODO: enable secure for https only
+      domain: process.env.DOMAIN,
+      path: "/api/auth",
+      expires: new Date(Date.now()),
+    })
+    .cookie("access_token", "", {
+      httpOnly: true,
+      //secure: true, // TODO: enable secure for https only
+      domain: process.env.DOMAIN,
+      path: "/api",
+      expires: new Date(Date.now()),
+    })
+    .json({ ok: true });
+});
 module.exports = router;
