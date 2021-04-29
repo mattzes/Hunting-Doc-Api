@@ -38,12 +38,10 @@ router.post("/register", async (req, res) => {
       .json({ ok: false, message: "An User with this Email already exists." });
   const usernameExist = await User.findOne({ username: value.username });
   if (usernameExist)
-    return res
-      .status(400)
-      .json({
-        ok: false,
-        message: "An User with this Username already exists.",
-      });
+    return res.status(400).json({
+      ok: false,
+      message: "An User with this Username already exists.",
+    });
 
   //Hash the passwords
   const salt = await bcrypt.genSalt(10);
@@ -86,7 +84,7 @@ router.post("/login", async (req, res) => {
       .json({ ok: false, message: "The username or password is wrong." });
 
   //Create tokens
-  var userJSON = user.toJSON();
+  let userJSON = user.toJSON();
   delete userJSON.password;
   delete userJSON.__v;
   delete userJSON.refresh_tokens;
@@ -126,7 +124,6 @@ router.post("/login", async (req, res) => {
           user.refresh_tokens[i],
           process.env.REFRESH_TOKEN_SECRET
         );
-        console.log(verified);
       } catch (error) {
         try {
           await user.updateOne({
@@ -155,6 +152,44 @@ router.post("/login", async (req, res) => {
       domain: process.env.DOMAIN,
       path: "/api",
       expires: new Date(Date.now() + 899700),
+    })
+    .json({ ok: true });
+});
+
+// * Refresh access token with refreh token
+router.post("/refresh_token", verifyRefreshToken, async (req, res) => {
+  res.send("test");
+});
+
+// * Logout
+router.post("/logout", verifyRefreshToken, async (req, res) => {
+  //Delete refreh token in DB
+  const user = await User.findById(req.user._id);
+  try {
+    await user.updateOne({
+      $pull: { refresh_tokens: req.user.refresh_token },
+    });
+  } catch (error_1) {
+    return res
+      .status(500)
+      .json({ ok: false, message: "Error while save data to DB" });
+  }
+
+  //Set cookies wich expires instantly
+  res
+    .cookie("refresh_token", "", {
+      httpOnly: true,
+      //secure: true, // TODO: enable secure for https only
+      domain: process.env.DOMAIN,
+      path: "/api/auth",
+      expires: new Date(Date.now()),
+    })
+    .cookie("access_token", "", {
+      httpOnly: true,
+      //secure: true, // TODO: enable secure for https only
+      domain: process.env.DOMAIN,
+      path: "/api",
+      expires: new Date(Date.now()),
     })
     .json({ ok: true });
 });

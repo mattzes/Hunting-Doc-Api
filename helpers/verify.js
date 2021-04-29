@@ -26,6 +26,7 @@ const verifyRefreshToken = async (req, res, next) => {
       process.env.REFRESH_TOKEN_SECRET
     );
     req.user = verified;
+    req.user.refresh_token = refresh_token;
     const user = await User.findOne({ _id: req.user._id });
     if (!user.refresh_tokens.includes(refresh_token))
       return res.status(403).json({ ok: false, message: "stolen token" });
