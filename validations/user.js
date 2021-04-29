@@ -1,6 +1,6 @@
 const Joi = require("joi");
 
-//Register Validation
+// * Register Validation
 const registerValidation = (data) => {
   const schema = Joi.object({
     username: Joi.string().min(6).max(32).alphanum().required(),
@@ -14,14 +14,16 @@ const registerValidation = (data) => {
         )
       ),
     email: Joi.string().min(6).required().email(),
+    scopes: Joi.array().items(Joi.string().max(16)).max(16),
   });
   return schema.validate(data);
 };
 
-//Login Validation
+// * Login Validation
 const loginValidation = (data) => {
   const schema = Joi.object({
-    username: Joi.string().min(6).alphanum().required(),
+    username: Joi.string().min(6).max(32).alphanum().required(),
+    refresh_tokens: Joi.array().items(Joi.string()).max(11),
     password: Joi.string()
       .min(8)
       .max(32)
