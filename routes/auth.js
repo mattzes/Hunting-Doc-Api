@@ -61,7 +61,6 @@ router.post("/register", async (req, res) => {
 // * Login
 router.post("/login", async (req, res) => {
   //Validate the data
-  console.log(req.body);
   const { error, value } = loginValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -78,24 +77,45 @@ router.post("/login", async (req, res) => {
   var userJSON = user.toJSON();
   delete userJSON.password;
   delete userJSON.__v;
-  delete refresh_tokens;
+  delete userJSON.refresh_tokens;
   const refresh_token = createRefreshToken(userJSON);
   const access_token = createAccessToken(userJSON);
+
+  //Check max logins on different devices
+  if (user.refresh_tokens.length == 10)
+    return res.status(403).json({ ok: false, message: "Max devices reached" });
 
   //Push refresh token to db
   try {
     user.refresh_tokens.push(refresh_token);
     user.save();
   } catch (error) {
-    res.status(500).json({ message: "Error while save data to DB" });
+    return res
+      .status(500)
+      .json({ ok: false, message: "Error while save data to DB" });
   }
 
+  //Delete old refresh token
+  const { cookies } = req;
+  if (cookies.refresh_token) {
+    try {
+      await user.updateOne({
+        $pull: { refresh_tokens: cookies.refresh_token },
+      });
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ ok: false, message: "Error while save data to DB" });
+    }
+  }
+
+  //Set cookies
   res
     .cookie("refresh_token", refresh_token, {
       httpOnly: true,
       //secure: true, // TODO: enable secure for https only
       domain: process.env.DOMAIN,
-      path: "/api/auth/refresh_token",
+      path: "/api/auth",
       //expires: new Date(Date.now() + 2591995000), // 2592000000 are close to 30d in milliseconds
     })
     .cookie("access_token", access_token, {
