@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const corsOptions = require('./config');
+const { clientError } = require('./handler/error');
 require('dotenv/config');
 
 // * Import Routes
@@ -17,6 +18,7 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use('/api/auth', authRoute);
 app.use('/api/shooting', shootingRoute);
+app.use(clientError);
 
 // * Connect to DB
 mongoose.connect(

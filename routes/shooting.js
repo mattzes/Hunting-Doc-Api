@@ -13,7 +13,7 @@ router.post('/add', verifyAccessToken, uploadShootingImages.array('images', 10),
   //Validate the data
   req.body.user_id = req.user._id.toString();
   const { error, value } = shootingValidation(req.body);
-  if (error) return res.status(400).json({ ok: false, message: error.details[0].message }).end();
+  if (error) next({ status: 400, msg: error.details[0].message });
 
   //Create a new Shooting
   const shooting = new Shooting(value);
@@ -23,7 +23,7 @@ router.post('/add', verifyAccessToken, uploadShootingImages.array('images', 10),
     await shooting.save();
     res.status(201).json({ ok: true }).end();
   } catch (error) {
-    res.status(500).send(error.message).end();
+    next({ status: 500, msg: error.message });
   }
 });
 
@@ -31,7 +31,7 @@ router.post('/add', verifyAccessToken, uploadShootingImages.array('images', 10),
 router.get('/getOne', verifyAccessToken, async (req, res) => {
   //Validate ID
   const { error } = idValidation(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
+  if (error) next({ status: 400, msg: error.details[0].message });
 
   //Find one shooting
   try {
@@ -39,10 +39,10 @@ router.get('/getOne', verifyAccessToken, async (req, res) => {
     if (shooting) {
       res.send(shooting);
     } else {
-      res.status(406).send('No Shooting with ID: ' + req.body._id + 'found');
+      next({ status: 406, msg: 'No Shooting with ID: ' + req.body._id + 'found' });
     }
   } catch (error) {
-    return res.status(500).send(error.message);
+    next({ status: 500, msg: error.message });
   }
 });
 
@@ -50,7 +50,7 @@ router.get('/getOne', verifyAccessToken, async (req, res) => {
 router.get('/getAll', verifyAccessToken, async (req, res) => {
   //Validate IDs
   const { error, value } = idValidation({ _id: req.user._id.toString() });
-  if (error) return res.status(400).send(error.details[0].message);
+  if (error) next({ status: 400, msg: error.details[0].message });
 
   //Find all shootings for specific user
   try {
@@ -58,10 +58,10 @@ router.get('/getAll', verifyAccessToken, async (req, res) => {
     if (shootings.length != 0) {
       res.send(shootings);
     } else {
-      res.status(406).send('No shootings found for user ID: ' + req.user._id);
+      next({ status: 406, msg: 'No shootings found for user ID: ' + req.user._id });
     }
   } catch (error) {
-    return res.status(500).send(error.message);
+    next({ status: 500, msg: error.message });
   }
 });
 
@@ -69,13 +69,13 @@ router.get('/getAll', verifyAccessToken, async (req, res) => {
 router.patch('/patch', verifyAccessToken, async (req, res) => {
   //Validate ID
   const id = idValidation({ _id: req.body._id });
-  if (id.error) return res.status(400).send(id.error.details[0].message);
+  if (id.error) next({ status: 400, msg: id.error.details[0].message });
 
   //Validate Data
   delete req.body._id;
   req.body.user_id = req.user._id.toString();
   const data = shootingValidation(req.body);
-  if (data.error) return res.status(400).send(data.error.details[0].message);
+  if (data.error) next({ status: 400, msg: data.error.details[0].message });
 
   //Patch a shooting
   try {
@@ -83,7 +83,7 @@ router.patch('/patch', verifyAccessToken, async (req, res) => {
     const updatedShooting = await Shooting.findById(id.value._id);
     res.json(updatedShooting);
   } catch (error) {
-    return res.status(500).send(error.message);
+    next({ status: 500, msg: error.message });
   }
 });
 
@@ -91,14 +91,14 @@ router.patch('/patch', verifyAccessToken, async (req, res) => {
 router.delete('/delete', verifyAccessToken, async (req, res) => {
   //Validate ID
   const { error, value } = idValidation(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
+  if (error) next({ status: 400, msg: error.details[0].message });
 
   //Delete a shooting
   try {
     await Shooting.findByIdAndDelete(value._id);
     res.json({ ok: true });
   } catch (error) {
-    res.status(500).send(error.message);
+    next({ status: 500, msg: error.message });
   }
 });
 

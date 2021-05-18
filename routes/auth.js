@@ -23,20 +23,16 @@ const createRefreshToken = user => {
 };
 
 // * Register User incl. validation
-router.post('/register', async (req, res) => {
+router.post('/register', async (req, res, next) => {
   //Validate the data
   const { error, value } = registerValidation(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
+  if (error) next({ status: 400, msg: error.details[0].message });
 
   //Check if the user already exists
   const emailExist = await User.findOne({ email: value.email });
-  if (emailExist) return res.status(400).json({ ok: false, message: 'An User with this Email already exists.' });
+  if (emailExist) next({ status: 400, msg: 'An User with this Email already exists.' });
   const usernameExist = await User.findOne({ username: value.username });
-  if (usernameExist)
-    return res.status(400).json({
-      ok: false,
-      message: 'An User with this Username already exists.',
-    });
+  if (usernameExist) next({ status: 400, msg: 'An User with this Username already exists.' });
 
   //Hash the passwords
   const salt = await bcrypt.genSalt(10);
@@ -54,7 +50,7 @@ router.post('/register', async (req, res) => {
     const savedUser = await user.save();
     res.status(201).json({ ok: true });
   } catch (error) {
-    res.status(500).json({ ok: false, message: 'Error while save data to DB' });
+    next({ status: 500, msg: 'Error while save data to DB' });
   }
 });
 
@@ -62,15 +58,15 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   //Validate the data
   const { error, value } = loginValidation(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
+  if (error) next({ status: 400, msg: error.details[0].message });
 
   //Check if the user exists
   const user = await User.findOne({ username: value.username });
-  if (!user) return res.status(400).json({ ok: false, message: 'The username or password is wrong.' });
+  if (!user) next({ status: 400, msg: 'The username or password is wrong.' });
 
   //Check if the password ist correct
   const validPass = await bcrypt.compare(value.password, user.password);
-  if (!validPass) return res.status(400).json({ ok: false, message: 'The username or password is wrong.' });
+  if (!validPass) next({ status: 400, msg: 'The username or password is wrong.' });
 
   //Create tokens
   let userJSON = user.toJSON();
@@ -79,14 +75,14 @@ router.post('/login', async (req, res) => {
   const access_token = createAccessToken(userJSON);
 
   //Check max logins on different devices
-  if (user.refresh_tokens.length >= 10) return res.status(403).json({ ok: false, message: 'Max logins reached' });
+  if (user.refresh_tokens.length >= 10) next({ status: 403, msg: 'Max logins reached' });
 
   //Push new refresh token to DB
   try {
     user.refresh_tokens.push(refresh_token);
     user.save();
   } catch (error) {
-    return res.status(500).json({ ok: false, message: 'Error while save data to DB' });
+    next({ status: 500, msg: 'Error while save data to DB' });
   }
 
   //Delete old refresh token if no refresh token isset check all tokens in dp if expired
@@ -97,7 +93,7 @@ router.post('/login', async (req, res) => {
         $pull: { refresh_tokens: cookies.refresh_token },
       });
     } catch (error) {
-      return res.status(500).json({ ok: false, message: 'Error while save data to DB' });
+      next({ status: 500, msg: 'Error while save data to DB' });
     }
   } else {
     for (i = 0; i < user.refresh_tokens.length; i++) {
@@ -109,7 +105,7 @@ router.post('/login', async (req, res) => {
             $pull: { refresh_tokens: user.refresh_tokens[i] },
           });
         } catch (error_1) {
-          return res.status(500).json({ ok: false, message: 'Error while save data to DB' });
+          next({ status: 500, msg: 'Error while save data to DB' });
         }
       }
     }
@@ -149,7 +145,7 @@ router.post('/refresh_token', verifyRefreshToken, async (req, res) => {
     user.refresh_tokens.push(refresh_token);
     user.save();
   } catch (error) {
-    return res.status(500).json({ ok: false, message: 'Error while save data to DB' });
+    next({ status: 500, msg: 'Error while save data to DB' });
   }
 
   //Delete old refresh token in DB
@@ -158,7 +154,7 @@ router.post('/refresh_token', verifyRefreshToken, async (req, res) => {
       $pull: { refresh_tokens: current_refresh_token },
     });
   } catch (error) {
-    return res.status(500).json({ ok: false, message: 'Error while save data to DB' });
+    next({ status: 500, msg: 'Error while save data to DB' });
   }
 
   //Set cookies
@@ -188,25 +184,13 @@ router.post('/logout', verifyRefreshToken, async (req, res) => {
       $pull: { refresh_tokens: req.user.refresh_token },
     });
   } catch (error_1) {
-    return res.status(500).json({ ok: false, message: 'Error while save data to DB' });
+    next({ status: 500, msg: 'Error while save data to DB' });
   }
 
   //Set cookies wich expires instantly
   res
-    .cookie('refresh_token', '', {
-      httpOnly: true,
-      //secure: true, // TODO: enable secure for https only
-      domain: process.env.DOMAIN,
-      path: '/api/auth',
-      expires: new Date(Date.now()),
-    })
-    .cookie('access_token', '', {
-      httpOnly: true,
-      //secure: true, // TODO: enable secure for https only
-      domain: process.env.DOMAIN,
-      path: '/api',
-      expires: new Date(Date.now()),
-    })
+    .cookie('refresh_token', '', { expires: new Date(Date.now()) })
+    .cookie('access_token', '', { expires: new Date(Date.now()) })
     .json({ ok: true });
 });
 
@@ -219,25 +203,13 @@ router.delete('/force_logout', verifyRefreshToken, async (req, res) => {
       $set: { refresh_tokens: [] },
     });
   } catch (error_1) {
-    return res.status(500).json({ ok: false, message: 'Error while save data to DB' });
+    next({ status: 500, msg: 'Error while save data to DB' });
   }
 
   //Set cookies wich expires instantly
   res
-    .cookie('refresh_token', '', {
-      httpOnly: true,
-      //secure: true, // TODO: enable secure for https only
-      domain: process.env.DOMAIN,
-      path: '/api/auth',
-      expires: new Date(Date.now()),
-    })
-    .cookie('access_token', '', {
-      httpOnly: true,
-      //secure: true, // TODO: enable secure for https only
-      domain: process.env.DOMAIN,
-      path: '/api',
-      expires: new Date(Date.now()),
-    })
+    .cookie('refresh_token', '', { expires: new Date(Date.now()) })
+    .cookie('access_token', '', { expires: new Date(Date.now()) })
     .json({ ok: true });
 });
 module.exports = router;
