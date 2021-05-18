@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const SchootingSchema = mongoose.Schema({
   user_id: {
@@ -12,7 +12,7 @@ const SchootingSchema = mongoose.Schema({
   },
   gender: {
     type: String,
-    enum: ["m", "w", "unknown"],
+    enum: ['m', 'w', 'unknown'],
     maxLength: 7,
   },
   weight: {
@@ -22,7 +22,7 @@ const SchootingSchema = mongoose.Schema({
     type: Number,
   },
   date: {
-    type: Number,
+    type: String,
     required: true,
   },
   hunting_ground: {
@@ -56,6 +56,10 @@ const SchootingSchema = mongoose.Schema({
     type: String,
     maxLength: 64,
   },
+  images: {
+    type: [String],
+    default: undefined,
+  },
 });
 
-module.exports = mongoose.model("Shooting", SchootingSchema);
+module.exports = mongoose.model('Shooting', SchootingSchema);

@@ -1,18 +1,20 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { verifyAccessToken } = require("../helpers/verify");
-const { shootingValidation } = require("../validations/shooting");
-const { idValidation } = require("../validations/genericValidation");
-const Shooting = require("../models/shooting");
+const { upload } = require('../helpers/upload');
+const { verifyAccessToken } = require('../helpers/verify');
+const { shootingValidation } = require('../validations/shooting');
+const { idValidation } = require('../validations/genericValidation');
+const Shooting = require('../models/shooting');
+const { MulterError } = require('multer');
 
 // TODO: include management for images in every route or maybe a specific route
 
 // * Add a schooting
-router.post("/add", verifyAccessToken, async (req, res) => {
+router.post('/add', verifyAccessToken, async (req, res) => {
   //Validate the data
   req.body.user_id = req.user._id.toString();
   const { error, value } = shootingValidation(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
+  if (error) return res.status(400).json({ ok: false, message: error.details[0].message }).end();
 
   //Create a new Shooting
   const shooting = new Shooting(value);
@@ -20,14 +22,14 @@ router.post("/add", verifyAccessToken, async (req, res) => {
   //Save the shooting
   try {
     await shooting.save();
-    res.status(201).json({ ok: true });
+    res.status(201).json({ ok: true }).end();
   } catch (error) {
-    res.status(500).send(error.message);
+    res.status(500).send(error.message).end();
   }
 });
 
 // * Get one shooting by shooting ID
-router.get("/getOne", verifyAccessToken, async (req, res) => {
+router.get('/getOne', verifyAccessToken, async (req, res) => {
   //Validate ID
   const { error, value } = idValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
@@ -38,7 +40,7 @@ router.get("/getOne", verifyAccessToken, async (req, res) => {
     if (shooting) {
       res.send(shooting);
     } else {
-      res.status(406).send("No Shooting with ID: " + req.body._id + "found");
+      res.status(406).send('No Shooting with ID: ' + req.body._id + 'found');
     }
   } catch (error) {
     return res.status(500).send(error.message);
@@ -46,7 +48,7 @@ router.get("/getOne", verifyAccessToken, async (req, res) => {
 });
 
 // * Get all shootings for specific user
-router.get("/getAll", verifyAccessToken, async (req, res) => {
+router.get('/getAll', verifyAccessToken, async (req, res) => {
   //Validate IDs
   const { error, value } = idValidation({ _id: req.user._id.toString() });
   if (error) return res.status(400).send(error.details[0].message);
@@ -57,7 +59,7 @@ router.get("/getAll", verifyAccessToken, async (req, res) => {
     if (shootings.length != 0) {
       res.send(shootings);
     } else {
-      res.status(406).send("No shootings found for user ID: " + req.user._id);
+      res.status(406).send('No shootings found for user ID: ' + req.user._id);
     }
   } catch (error) {
     return res.status(500).send(error.message);
@@ -65,7 +67,7 @@ router.get("/getAll", verifyAccessToken, async (req, res) => {
 });
 
 // * Update a shooting
-router.patch("/patch", verifyAccessToken, async (req, res) => {
+router.patch('/patch', verifyAccessToken, async (req, res) => {
   //Validate ID
   const id = idValidation({ _id: req.body._id });
   if (id.error) return res.status(400).send(id.error.details[0].message);
@@ -87,7 +89,7 @@ router.patch("/patch", verifyAccessToken, async (req, res) => {
 });
 
 // * Delete a shooting
-router.delete("/delete", verifyAccessToken, async (req, res) => {
+router.delete('/delete', verifyAccessToken, async (req, res) => {
   //Validate ID
   const { error, value } = idValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
