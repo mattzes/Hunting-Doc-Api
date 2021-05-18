@@ -3,7 +3,7 @@ const router = express.Router();
 const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { verifyRefreshToken } = require('../helpers/verify');
+const { verifyRefreshToken } = require('../handler/verify');
 const { registerValidation, loginValidation } = require('../validations/user');
 
 //Create a jwt access token

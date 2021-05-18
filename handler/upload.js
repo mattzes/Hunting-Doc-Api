@@ -1,10 +1,9 @@
 const multer = require('multer');
 const fs = require('fs');
-const { path } = require('path');
 require('dotenv');
 
 // * Specifie the upload path for images
-const multer_storage = multer.diskStorage({
+const shootingImageStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     let dir = process.env.ABSOLUTE_IMAGES_PATH + req.user._id.toString();
     if (!fs.existsSync(dir)) fs.mkdirSync(dir);
@@ -19,8 +18,8 @@ const multer_storage = multer.diskStorage({
 });
 
 // * set the upload with multer
-const upload = multer({
-  storage: multer_storage,
+const uploadShootingImages = multer({
+  storage: shootingImageStorage,
 });
 
-module.exports.upload = upload;
+module.exports.uploadShootingImages = uploadShootingImages;

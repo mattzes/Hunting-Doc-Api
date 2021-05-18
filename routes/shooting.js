@@ -1,16 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { upload } = require('../helpers/upload');
-const { verifyAccessToken } = require('../helpers/verify');
+const { uploadShootingImages } = require('../handler/upload');
+const { verifyAccessToken } = require('../handler/verify');
 const { shootingValidation } = require('../validations/shooting');
 const { idValidation } = require('../validations/genericValidation');
 const Shooting = require('../models/shooting');
-const { MulterError } = require('multer');
 
 // TODO: include management for images in every route or maybe a specific route
 
 // * Add a schooting
-router.post('/add', verifyAccessToken, async (req, res) => {
+router.post('/add', verifyAccessToken, uploadShootingImages.array('images', 10), async (req, res) => {
   //Validate the data
   req.body.user_id = req.user._id.toString();
   const { error, value } = shootingValidation(req.body);
@@ -31,7 +30,7 @@ router.post('/add', verifyAccessToken, async (req, res) => {
 // * Get one shooting by shooting ID
 router.get('/getOne', verifyAccessToken, async (req, res) => {
   //Validate ID
-  const { error, value } = idValidation(req.body);
+  const { error } = idValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   //Find one shooting
