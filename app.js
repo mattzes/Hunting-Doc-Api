@@ -3,7 +3,7 @@ const app = express();
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-const corsOptions = require('./config');
+const config = require('./config');
 const { clientError } = require('./handler/error');
 require('dotenv/config');
 
@@ -14,7 +14,7 @@ const shootingRoute = require('./routes/shooting');
 // * Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors(corsOptions));
+app.use(cors(config.corsOptions));
 app.use(cookieParser());
 app.use('/api/auth', authRoute);
 app.use('/api/shooting', shootingRoute);
