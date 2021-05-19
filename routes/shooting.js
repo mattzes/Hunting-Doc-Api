@@ -9,7 +9,7 @@ const Shooting = require('../models/shooting');
 // TODO: include management for images in every route or maybe a specific route
 
 // * Add a schooting
-router.post('/add', verifyAccessToken, uploadShootingImages, async (req, res) => {
+router.post('/add', verifyAccessToken, uploadShootingImages, async (req, res, next) => {
   //Validate the data
   req.body.user_id = req.user._id.toString();
   const { error, value } = shootingValidation(req.body);
@@ -28,7 +28,7 @@ router.post('/add', verifyAccessToken, uploadShootingImages, async (req, res) =>
 });
 
 // * Get one shooting by shooting ID
-router.get('/getOne', verifyAccessToken, async (req, res) => {
+router.get('/getOne', verifyAccessToken, async (req, res, next) => {
   //Validate ID
   const { error } = idValidation(req.body);
   if (error) return next({ status: 400, msg: error.details[0].message });
@@ -47,7 +47,7 @@ router.get('/getOne', verifyAccessToken, async (req, res) => {
 });
 
 // * Get all shootings for specific user
-router.get('/getAll', verifyAccessToken, async (req, res) => {
+router.get('/getAll', verifyAccessToken, async (req, res, next) => {
   //Validate IDs
   const { error, value } = idValidation({ _id: req.user._id.toString() });
   if (error) return next({ status: 400, msg: error.details[0].message });
@@ -66,7 +66,7 @@ router.get('/getAll', verifyAccessToken, async (req, res) => {
 });
 
 // * Update a shooting
-router.patch('/patch', verifyAccessToken, async (req, res) => {
+router.patch('/patch', verifyAccessToken, async (req, res, next) => {
   //Validate ID
   const id = idValidation({ _id: req.body._id });
   if (id.error) return next({ status: 400, msg: id.error.details[0].message });
@@ -88,7 +88,7 @@ router.patch('/patch', verifyAccessToken, async (req, res) => {
 });
 
 // * Delete a shooting
-router.delete('/delete', verifyAccessToken, async (req, res) => {
+router.delete('/delete', verifyAccessToken, async (req, res, next) => {
   //Validate ID
   const { error, value } = idValidation(req.body);
   if (error) return next({ status: 400, msg: error.details[0].message });

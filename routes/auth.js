@@ -55,7 +55,7 @@ router.post('/register', async (req, res, next) => {
 });
 
 // * Login
-router.post('/login', async (req, res) => {
+router.post('/login', async (req, res, next) => {
   //Validate the data
   const { error, value } = loginValidation(req.body);
   if (error) return next({ status: 400, msg: error.details[0].message });
@@ -130,7 +130,7 @@ router.post('/login', async (req, res) => {
 });
 
 // * Refresh access token with refreh token
-router.post('/refresh_token', verifyRefreshToken, async (req, res) => {
+router.post('/refresh_token', verifyRefreshToken, async (req, res, next) => {
   //Find user
   const user = await User.findById(req.user._id);
 
@@ -176,7 +176,7 @@ router.post('/refresh_token', verifyRefreshToken, async (req, res) => {
 });
 
 // * Logout
-router.post('/logout', verifyRefreshToken, async (req, res) => {
+router.post('/logout', verifyRefreshToken, async (req, res, next) => {
   //Delete refreh token in DB
   const user = await User.findById(req.user._id);
   try {
@@ -195,7 +195,7 @@ router.post('/logout', verifyRefreshToken, async (req, res) => {
 });
 
 // * Force logout
-router.delete('/force_logout', verifyRefreshToken, async (req, res) => {
+router.delete('/force_logout', verifyRefreshToken, async (req, res, next) => {
   //Delete all refreh tokens in DB
   const user = await User.findById(req.user._id);
   try {
