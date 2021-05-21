@@ -60,6 +60,9 @@ const SchootingSchema = mongoose.Schema({
     type: [String],
     default: undefined,
   },
+  avatar: {
+    type: String,
+  },
 });
 
 module.exports = mongoose.model('Shooting', SchootingSchema);

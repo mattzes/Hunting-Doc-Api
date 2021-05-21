@@ -17,8 +17,15 @@ const shootingImageStorage = multer.diskStorage({
   filename: function (req, file, cb) {
     let filetype = file.originalname.split('.');
     let filename = Date.now().toString() + '.' + filetype[filetype.length - 1];
-    if (!req.body.images) req.body.images = [];
-    req.body.images.push(filename);
+    switch (file.fieldname) {
+      case 'images':
+        if (!req.body.images) req.body.images = [];
+        req.body.images.push(filename);
+        break;
+      case 'avatar':
+        req.body.avatar = filename;
+        break;
+    }
     cb(null, filename);
   },
 });
@@ -34,11 +41,13 @@ const shootingFileFilter = (req, file, cb) => {
 // * set the upload with multer
 const uploadShootingImages = multer({
   limits: {
-    fileSize: config.shootingFileSize,
-    files: config.maxShootingFiles,
+    fileSize: config.maxShootingFiles,
   },
   fileFilter: shootingFileFilter,
   storage: shootingImageStorage,
-}).array('images');
+}).fields([
+  { name: 'avatar', maxCount: 1 },
+  { name: 'images', maxCount: config.maxShootingFiles },
+]);
 
 module.exports.uploadShootingImages = uploadShootingImages;

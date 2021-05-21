@@ -5,8 +5,7 @@ const { verifyAccessToken } = require('../handler/verify');
 const { shootingValidation } = require('../validations/shooting');
 const { idValidation } = require('../validations/genericValidation');
 const Shooting = require('../models/shooting');
-
-// TODO: include management for images in every route or maybe a specific route
+const fs = require('fs');
 
 // * Add a schooting
 router.post('/add', verifyAccessToken, uploadShootingImages, async (req, res, next) => {
@@ -28,7 +27,7 @@ router.post('/add', verifyAccessToken, uploadShootingImages, async (req, res, ne
 });
 
 // * Get one shooting by shooting ID
-router.get('/getOne', verifyAccessToken, async (req, res, next) => {
+router.get('/one', verifyAccessToken, async (req, res, next) => {
   //Validate ID
   const { error } = idValidation(req.body);
   if (error) return next({ status: 400, msg: error.details[0].message });
@@ -47,7 +46,7 @@ router.get('/getOne', verifyAccessToken, async (req, res, next) => {
 });
 
 // * Get all shootings for specific user
-router.get('/getAll', verifyAccessToken, async (req, res, next) => {
+router.get('/all', verifyAccessToken, async (req, res, next) => {
   //Validate IDs
   const { error, value } = idValidation({ _id: req.user._id.toString() });
   if (error) return next({ status: 400, msg: error.details[0].message });
@@ -65,8 +64,21 @@ router.get('/getAll', verifyAccessToken, async (req, res, next) => {
   }
 });
 
+router.get('/avatar/:id', verifyAccessToken, async (req, res, next) => {
+  // Validate data
+  if (req.body != {}) return next({status: 400, msg: "body has to be empty"})
+  
+  const shooting;
+  try {
+    shooting = await Shooting.findById(req.params.id);
+    if (!shooting) return next({stauts: 400, msg: "No shooting found with ID: " + req.params.id})
+  } catch (error) {
+    return next({status: 500, msg: error.message})
+  }  
+})
+
 // * Update a shooting
-router.patch('/patch', verifyAccessToken, async (req, res, next) => {
+router.patch('/patch', verifyAccessToken, uploadShootingImages, async (req, res, next) => {
   //Validate ID
   const id = idValidation({ _id: req.body._id });
   if (id.error) return next({ status: 400, msg: id.error.details[0].message });
@@ -76,6 +88,29 @@ router.patch('/patch', verifyAccessToken, async (req, res, next) => {
   req.body.user_id = req.user._id.toString();
   const data = shootingValidation(req.body);
   if (data.error) return next({ status: 400, msg: data.error.details[0].message });
+
+  //Delete files
+  try {
+    const shooting = await Shooting.findById(id.value._id);
+    if (data.value.delImages) {
+      data.value.delImages.forEach(async e => {
+        fs.unlinkSync(process.env.ABSOLUTE_FILE_PATH + id.value._id + '/' + e);
+        await shooting.updateOne({
+          $pull: { images: e },
+        });
+      });
+      delete data.value.delImages;
+    }
+    if (data.value.delAvatar) {
+      fs.unlinkSync(process.env.ABSOLUTE_FILE_PATH + id.value._id + '/' + data.value.delAvatar);
+      await shooting.updateOne({
+        $unset: { avatar: '' },
+      });
+      delete data.value.delAvatar;
+    }
+  } catch (error) {
+    return next({ status: 500, msg: 'failed while deleting old data' });
+  }
 
   //Patch a shooting
   try {
@@ -92,6 +127,19 @@ router.delete('/delete', verifyAccessToken, async (req, res, next) => {
   //Validate ID
   const { error, value } = idValidation(req.body);
   if (error) return next({ status: 400, msg: error.details[0].message });
+
+  // Delete files
+  try {
+    const shooting = await Shooting.findById(value._id);
+    try {
+      fs.unlinkSync(process.env.ABSOLUTE_FILE_PATH + shooting._id + '/' + shooting.avatar);
+      shooting.images.forEach(e => fs.unlinkSync(process.env.ABSOLUTE_FILE_PATH + shooting._id + '/' + e));
+    } catch (error) {
+      return next({ status: 500, msg: 'failed while deleting files' });
+    }
+  } catch (error) {
+    return next({ status: 500, msg: error.message });
+  }
 
   //Delete a shooting
   try {
