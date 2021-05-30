@@ -1,3 +1,4 @@
+const config = require('../config');
 const Joi = require('joi');
 Joi.objectID = require('joi-objectid')(Joi);
 
@@ -18,9 +19,9 @@ const shootingValidation = data => {
     distance: Joi.number().integer(),
     weapon: Joi.string().max(64),
     avatar: Joi.string(),
-    images: Joi.array(),
-    delImages: Joi.array(Joi.string().min(15).max(18)).max(10),
-    delAvatar: Joi.string().min(15).max(18),
+    images: Joi.array().items(Joi.string()),
+    delImages: Joi.array().items(Joi.string().min(15).max(18)).max(config.maxShootingFiles),
+    delAvatar: Joi.string().min(22).max(25),
   });
   return schema.validate(data);
 };

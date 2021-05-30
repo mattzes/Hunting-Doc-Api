@@ -17,6 +17,31 @@ router.post('/add', verifyAccessToken, uploadShootingImages, async (req, res, ne
   //Create a new Shooting
   const shooting = new Shooting(value);
 
+  //Move files
+  let oldPath = process.env.ABSOLUTE_FILE_PATH_TMP + req.user._id + '/';
+  let newPath = process.env.ABSOLUTE_FILE_PATH + req.user._id + '/' + shooting._id + '/';
+  if (shooting.avatar) {
+    try {
+      if (!fs.existsSync(newPath)) fs.mkdirSync(newPath, { recursive: true });
+      fs.renameSync(oldPath + shooting.avatar, newPath + shooting.avatar);
+    } catch (error) {
+      next({ status: 500, msg: 'Failed while saving avatar' });
+    }
+  }
+  if (shooting.images) {
+    try {
+      if (!fs.existsSync(newPath)) fs.mkdirSync(newPath, { recursive: true });
+      shooting.images.forEach(image => {
+        fs.renameSync(oldPath + image, newPath + image);
+      });
+    } catch (error) {
+      next({ status: 500, msg: 'Failed while saving images' });
+    }
+  }
+  try {
+    if (fs.existsSync(oldPath)) fs.rmdirSync(oldPath, { recursive: true });
+  } catch (error) {}
+
   //Save the shooting
   try {
     await shooting.save();
@@ -66,16 +91,15 @@ router.get('/all', verifyAccessToken, async (req, res, next) => {
 
 router.get('/avatar/:id', verifyAccessToken, async (req, res, next) => {
   // Validate data
-  if (req.body != {}) return next({status: 400, msg: "body has to be empty"})
-  
-  const shooting;
+  if (req.body != {}) return next({ status: 400, msg: 'body has to be empty' });
+
   try {
-    shooting = await Shooting.findById(req.params.id);
-    if (!shooting) return next({stauts: 400, msg: "No shooting found with ID: " + req.params.id})
+    const shooting = await Shooting.findById(req.params.id);
+    if (!shooting) return next({ stauts: 400, msg: 'No shooting found with ID: ' + req.params.id });
   } catch (error) {
-    return next({status: 500, msg: error.message})
-  }  
-})
+    return next({ status: 500, msg: error.message });
+  }
+});
 
 // * Update a shooting
 router.patch('/patch', verifyAccessToken, uploadShootingImages, async (req, res, next) => {
@@ -93,16 +117,16 @@ router.patch('/patch', verifyAccessToken, uploadShootingImages, async (req, res,
   try {
     const shooting = await Shooting.findById(id.value._id);
     if (data.value.delImages) {
-      data.value.delImages.forEach(async e => {
-        fs.unlinkSync(process.env.ABSOLUTE_FILE_PATH + id.value._id + '/' + e);
+      data.value.delImages.forEach(async image => {
+        fs.unlinkSync(process.env.ABSOLUTE_FILE_PATH + req.user._id + '/' + id.value._id + '/' + image);
         await shooting.updateOne({
-          $pull: { images: e },
+          $pull: { images: image },
         });
       });
       delete data.value.delImages;
     }
     if (data.value.delAvatar) {
-      fs.unlinkSync(process.env.ABSOLUTE_FILE_PATH + id.value._id + '/' + data.value.delAvatar);
+      fs.unlinkSync(process.env.ABSOLUTE_FILE_PATH + req.user._id + '/' + id.value._id + '/' + data.value.delAvatar);
       await shooting.updateOne({
         $unset: { avatar: '' },
       });
@@ -110,6 +134,28 @@ router.patch('/patch', verifyAccessToken, uploadShootingImages, async (req, res,
     }
   } catch (error) {
     return next({ status: 500, msg: 'failed while deleting old data' });
+  }
+
+  //Move files
+  let oldPath = process.env.ABSOLUTE_FILE_PATH_TMP + req.user._id + '/';
+  let newPath = process.env.ABSOLUTE_FILE_PATH + req.user._id + '/' + shooting._id + '/';
+  if (shooting.images) {
+    try {
+      if (!fs.existsSync(newPath)) fs.mkdirSync(newPath, { recursive: true });
+      shooting.images.forEach(image => {
+        fs.renameSync(oldPath + image, newPath + image);
+      });
+    } catch (error) {
+      next({ status: 500, msg: 'Failed while saving images' });
+    }
+  }
+  if (shooting.avatar) {
+    try {
+      if (!fs.existsSync(newPath)) fs.mkdirSync(newPath, { recursive: true });
+      fs.renameSync(oldPath + shooting.avatar, newPath + shooting.avatar);
+    } catch (error) {
+      next({ status: 500, msg: 'Failed while saving avatar' });
+    }
   }
 
   //Patch a shooting
@@ -132,10 +178,9 @@ router.delete('/delete', verifyAccessToken, async (req, res, next) => {
   try {
     const shooting = await Shooting.findById(value._id);
     try {
-      fs.unlinkSync(process.env.ABSOLUTE_FILE_PATH + shooting._id + '/' + shooting.avatar);
-      shooting.images.forEach(e => fs.unlinkSync(process.env.ABSOLUTE_FILE_PATH + shooting._id + '/' + e));
+      fs.rmdirSync(process.env.ABSOLUTE_FILE_PATH + req.user._id + '/' + shooting._id);
     } catch (error) {
-      return next({ status: 500, msg: 'failed while deleting files' });
+      return next({ status: 500, msg: 'failed while deleting images' });
     }
   } catch (error) {
     return next({ status: 500, msg: error.message });

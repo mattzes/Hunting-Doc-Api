@@ -7,7 +7,7 @@ require('dotenv');
 const shootingImageStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     try {
-      let dir = process.env.ABSOLUTE_FILE_PATH + req.user._id.toString();
+      let dir = process.env.ABSOLUTE_FILE_PATH_TMP + req.user._id.toString();
       if (!fs.existsSync(dir)) fs.mkdirSync(dir);
       cb(null, dir);
     } catch (error) {
@@ -23,6 +23,7 @@ const shootingImageStorage = multer.diskStorage({
         req.body.images.push(filename);
         break;
       case 'avatar':
+        filename = 'avatar_' + filename;
         req.body.avatar = filename;
         break;
     }
@@ -41,7 +42,7 @@ const shootingFileFilter = (req, file, cb) => {
 // * set the upload with multer
 const uploadShootingImages = multer({
   limits: {
-    fileSize: config.maxShootingFiles,
+    fileSize: config.shootingFileSize,
   },
   fileFilter: shootingFileFilter,
   storage: shootingImageStorage,
