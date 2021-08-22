@@ -98,7 +98,7 @@ router.patch('/data', verifyAccessToken, async (req, res, next) => {
 });
 
 // * Get one shooting by shooting ID
-router.get('/one', verifyAccessToken, async (req, res, next) => {
+router.get('/data', verifyAccessToken, async (req, res, next) => {
   //Validate ID
   let { error } = idValidation(req.body);
   if (error) return next({ status: 400, msg: error.details[0].message });
@@ -117,7 +117,7 @@ router.get('/one', verifyAccessToken, async (req, res, next) => {
 });
 
 // * Get all shootings for specific user
-router.get('/all', verifyAccessToken, async (req, res, next) => {
+router.get('/data/all', verifyAccessToken, async (req, res, next) => {
   //Validate IDs
   let { error, value } = idValidation({ _id: req.user._id.toString() });
   if (error) return next({ status: 400, msg: error.details[0].message });
@@ -130,18 +130,6 @@ router.get('/all', verifyAccessToken, async (req, res, next) => {
     } else {
       return next({ status: 406, msg: 'No shootings found for user ID: ' + req.user._id });
     }
-  } catch (error) {
-    return next({ status: 500, msg: error.message });
-  }
-});
-
-router.get('/avatar/:id', verifyAccessToken, async (req, res, next) => {
-  // Validate data
-  if (req.body != {}) return next({ status: 400, msg: 'body has to be empty' });
-
-  try {
-    let shooting = await Shooting.findOne({ _id: req.params.id, user_id: req.user._id });
-    if (!shooting) return next({ stauts: 400, msg: 'No shooting found with ID: ' + req.params.id });
   } catch (error) {
     return next({ status: 500, msg: error.message });
   }
@@ -169,6 +157,28 @@ router.delete('', verifyAccessToken, async (req, res, next) => {
   try {
     await Shooting.findOneAndDelete({ _id: value._id, user_id: req.user._id });
     res.json({ ok: true });
+  } catch (error) {
+    return next({ status: 500, msg: error.message });
+  }
+});
+
+// * Upload an avatar in tmp folder
+router.post('/avatar', verifyAccessToken, uploadShootingAvatar, (req, res, next) => {
+  //Set timer to delete file if its wont be saved after 1h
+  setTimeout(() => {
+    fs.rmSync(path.join(process.env.ABSOLUTE_FILE_PATH_TMP, req.user._id, req.body.avatar), { force: true });
+  }, 3600000);
+
+  res.status(201).json({ avatarName: req.body.avatar }).end();
+});
+
+router.get('/avatar', verifyAccessToken, async (req, res, next) => {
+  // Validate data
+  if (req.body != {}) return next({ status: 400, msg: 'body has to be empty' });
+
+  try {
+    let shooting = await Shooting.findOne({ _id: req.params.id, user_id: req.user._id });
+    if (!shooting) return next({ stauts: 400, msg: 'No shooting found with ID: ' + req.params.id });
   } catch (error) {
     return next({ status: 500, msg: error.message });
   }
