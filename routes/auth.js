@@ -123,7 +123,6 @@ router.post('/login', async (req, res, next) => {
       httpOnly: true,
       //secure: true, // TODO: enable secure for https only
       domain: process.env.DOMAIN,
-      path: '/api',
       expires: new Date(Date.now() + 899700),
     })
     .json({ ok: true });
@@ -169,7 +168,6 @@ router.post('/refresh_token', verifyRefreshToken, async (req, res, next) => {
       httpOnly: true,
       //secure: true, // TODO: enable secure for https only
       domain: process.env.DOMAIN,
-      path: '/api',
       expires: new Date(Date.now() + 899700),
     })
     .json({ ok: true });
