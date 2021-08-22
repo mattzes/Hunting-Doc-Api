@@ -12,9 +12,9 @@ const authRoute = require('./routes/auth');
 const shootingRoute = require('./routes/shooting');
 
 // * Middleware
+app.use(cors(config.corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors(config.corsOptions));
 app.use(cookieParser());
 app.use('/api/auth', authRoute);
 app.use('/api/shooting', shootingRoute);

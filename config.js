@@ -12,8 +12,5 @@ const config = {
 
   // Define max size of files in bytes
   shootingFileSize: 10485760, // 10485760 are 10Mb
-
-  // Define how much files are allowed for a shooting
-  maxShootingFiles: 10,
 };
 module.exports = config;

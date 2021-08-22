@@ -12,16 +12,15 @@ const shootingImageStorage = multer.diskStorage({
       if (!fs.existsSync(dir)) fs.mkdirSync(dir);
       cb(null, dir);
     } catch (error) {
-      cb({ status: 500, msg: 'failed to store images in destination' });
+      cb({ status: 500, msg: 'failed to store image in destination' });
     }
   },
   filename: function (req, file, cb) {
     let filetype = file.originalname.split('.');
     let filename = Date.now().toString() + '.' + filetype[filetype.length - 1];
     switch (file.fieldname) {
-      case 'images':
-        if (!req.body.images) req.body.images = [];
-        req.body.images.push(filename);
+      case 'image':
+        req.body.image = filename;
         break;
       case 'avatar':
         filename = 'avatar_' + filename;
@@ -40,16 +39,23 @@ const shootingFileFilter = (req, file, cb) => {
   }
 };
 
-// * set the upload with multer
-const uploadShootingImages = multer({
+// * set the upload for image with multer
+const uploadShootingImage = multer({
   limits: {
     fileSize: config.shootingFileSize,
   },
   fileFilter: shootingFileFilter,
   storage: shootingImageStorage,
-}).fields([
-  { name: 'avatar', maxCount: 1 },
-  { name: 'images', maxCount: config.maxShootingFiles },
-]);
+}).fields([{ name: 'image', maxCount: 1 }]);
 
-module.exports.uploadShootingImages = uploadShootingImages;
+// * set the upload for avatar with multer
+const uploadShootingAvatar = multer({
+  limits: {
+    fileSize: config.shootingFileSize,
+  },
+  fileFilter: shootingFileFilter,
+  storage: shootingImageStorage,
+}).fields([{ name: 'avatar', maxCount: 1 }]);
+
+module.exports.uploadShootingImage = uploadShootingImage;
+module.exports.uploadShootingAvatar = uploadShootingAvatar;
