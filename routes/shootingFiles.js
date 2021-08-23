@@ -4,8 +4,8 @@ const { verifyAccessToken } = require('../handler/verify');
 const path = require('path');
 const fs = require('fs');
 
-// * Serve a tmp avatar
-router.get('/tmp/avatar/:name', verifyAccessToken, (req, res, next) => {
+// * Serve a tmp file
+router.get('/tmp/file/:name', verifyAccessToken, (req, res, next) => {
   let file = path.join(process.env.ABSOLUTE_FILE_PATH_TMP, req.user._id, req.params.name);
 
   if (fs.existsSync(file)) {
@@ -15,8 +15,8 @@ router.get('/tmp/avatar/:name', verifyAccessToken, (req, res, next) => {
   }
 });
 
-// * Serve an avatar
-router.get('/avatar/:shootingId/:name', verifyAccessToken, (req, res, next) => {
+// * Serve a static file
+router.get('/file/:shootingId/:name', verifyAccessToken, (req, res, next) => {
   let file = path.join(process.env.ABSOLUTE_FILE_PATH, req.user._id, req.params.shootingId, req.params.name);
 
   if (fs.existsSync(file)) {
