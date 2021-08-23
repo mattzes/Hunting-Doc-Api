@@ -9,10 +9,14 @@ const fs = require('fs');
 const path = require('path');
 
 const moveFiles = (oldPath, newPath, files) => {
-  if (files.avatar) {
+  let avatar;
+  let images;
+
+  if (files.avatar && path.join(oldPath, files.avatar)) {
     try {
       if (!fs.existsSync(newPath)) fs.mkdirSync(newPath, { recursive: true });
       fs.renameSync(path.join(oldPath, files.avatar), path.join(newPath, files.avatar));
+      avatar = files.avatar;
     } catch (error) {
       return { error: { status: 500, msg: 'Failed while saving avatar' } };
     }
@@ -20,8 +24,12 @@ const moveFiles = (oldPath, newPath, files) => {
   if (files.images) {
     try {
       if (!fs.existsSync(newPath)) fs.mkdirSync(newPath, { recursive: true });
-      files.images.forEach(image => {
-        fs.renameSync(path.join(oldPath, image), path.join(newPath, image));
+      files.images.map(image => {
+        let imagePath = path.join(oldPath, image);
+        if (fs.existsSync(imagePath)) {
+          fs.renameSync(imagePath, path.join(newPath, image));
+          images.push(image);
+        }
       });
     } catch (error) {
       return { error: { status: 500, msg: 'Failed while saving images' } };
@@ -31,7 +39,7 @@ const moveFiles = (oldPath, newPath, files) => {
   try {
     if (fs.existsSync(oldPath)) fs.rmdirSync(oldPath, { recursive: true });
   } catch (error) {}
-  return;
+  return { avatar: avatar, images: images };
 };
 
 // * Add schooting data
@@ -48,14 +56,16 @@ router.post('/data', verifyAccessToken, async (req, res, next) => {
   if (shooting.avatar || shooting.images) {
     let oldPath = path.join(process.env.ABSOLUTE_FILE_PATH_TMP, value.user_id);
     let newPath = path.join(process.env.ABSOLUTE_FILE_PATH, value.user_id, shooting._id.toString());
-    error = moveFiles(oldPath, newPath, shooting);
-    if (error) next(error);
+    movedFiles = moveFiles(oldPath, newPath, shooting);
+    if (movedFiles.error) return next(movedFiles.error);
+    shooting.avatar = movedFiles.avatar;
+    shooting.images = movedFiles.images;
   }
 
   //Save the shooting
   try {
     await shooting.save();
-    res.status(201).json({ ok: true }).end();
+    res.status(201).json(shooting).end();
   } catch (error) {
     return next({ status: 500, msg: error.message });
   }
@@ -70,7 +80,7 @@ router.patch('/data', verifyAccessToken, async (req, res, next) => {
   if (error) return next({ status: 400, msg: error.details[0].message });
 
   //Find and update the shooting
-  let { _id, user_id, ...updateData } = value;
+  let { _id, user_id, delAvatar, delImages, ...updateData } = value;
   let updatedShooting;
   try {
     await Shooting.findOneAndUpdate({ _id: value._id, user_id: value.user_id }, updateData);
@@ -80,12 +90,14 @@ router.patch('/data', verifyAccessToken, async (req, res, next) => {
   }
 
   //Move files from tmp to images destination
+  let newPath = path.join(process.env.ABSOLUTE_FILE_PATH, value.user_id, updatedShooting._id.toString());
   if (updatedShooting.avatar || updatedShooting.images) {
-    let files = { avatar: value.avatar, images: value.images };
     let oldPath = path.join(process.env.ABSOLUTE_FILE_PATH_TMP, value.user_id);
-    let newPath = path.join(process.env.ABSOLUTE_FILE_PATH, value.user_id, updatedShooting._id.toString());
-    error = moveFiles(oldPath, newPath, files);
-    if (error) next(error);
+    let files = { avatar: value.avatar, images: value.images };
+    movedFiles = moveFiles(oldPath, newPath, files);
+    if (movedFiles.error) next(movedFiles.error);
+    updatedShooting.avatar = movedFiles.avatar;
+    updatedShooting.images.push(movedFiles.images);
   }
 
   //Save the shooting
@@ -95,6 +107,12 @@ router.patch('/data', verifyAccessToken, async (req, res, next) => {
   } catch (error) {
     return next({ status: 500, msg: error.message });
   }
+
+  if (delAvatar) fs.rmSync(path.join(newPath, delAvatar), { force: true, maxRetries: 5, retryDelay: 30000 });
+  if (delImages)
+    delImages.map(image => {
+      fs.rmSync(path.join(newPath, image), { force: true, maxRetries: 5, retryDelay: 30000 });
+    });
 });
 
 // * Get one shooting by shooting ID
@@ -156,13 +174,13 @@ router.delete('', verifyAccessToken, async (req, res, next) => {
   //Delete a shooting
   try {
     await Shooting.findOneAndDelete({ _id: value._id, user_id: req.user._id });
-    res.json({ ok: true });
+    res.status(200).json({ ok: true });
   } catch (error) {
     return next({ status: 500, msg: error.message });
   }
 });
 
-// * Upload an avatar in tmp folder
+// * Upload an avatar in tmp folder (can also be used as a patch with delAvatar key in req.body)
 router.post('/avatar', verifyAccessToken, uploadShootingAvatar, (req, res, next) => {
   //Set timer to delete file if its wont be saved after 1h
   setTimeout(() => {
@@ -170,18 +188,25 @@ router.post('/avatar', verifyAccessToken, uploadShootingAvatar, (req, res, next)
   }, 3600000);
 
   res.status(201).json({ avatarName: req.body.avatar }).end();
+
+  if (req.body.delAvatar)
+    fs.rmSync(path.join(process.env.ABSOLUTE_FILE_PATH_TMP, req.user._id, req.body.delAvatar), { force: true });
 });
 
-router.get('/avatar', verifyAccessToken, async (req, res, next) => {
-  // Validate data
-  if (req.body != {}) return next({ status: 400, msg: 'body has to be empty' });
+// * Upload an image in tmp folder
+router.post('/image', verifyAccessToken, uploadShootingImage, (req, res, next) => {
+  setTimeout(() => {
+    fs.rmSync(path.join(process.env.ABSOLUTE_FILE_PATH_TMP, req.user._id, req.body.image), { force: true });
+  }, 3600000);
 
-  try {
-    let shooting = await Shooting.findOne({ _id: req.params.id, user_id: req.user._id });
-    if (!shooting) return next({ stauts: 400, msg: 'No shooting found with ID: ' + req.params.id });
-  } catch (error) {
-    return next({ status: 500, msg: error.message });
-  }
+  res.status(201).json({ imageName: req.body.image });
+});
+
+// * Delete an image in tmp folder
+router.delete('/image', verifyAccessToken, (req, res, next) => {
+  fs.rmSync(path.join(process.env.ABSOLUTE_FILE_PATH_TMP, req.user._id, req.body.delImage), { force: true });
+
+  res.send('test').end();
 });
 
 module.exports = router;

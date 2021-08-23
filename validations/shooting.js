@@ -17,7 +17,9 @@ const shootingValidation = data => {
     distance: Joi.number().integer(),
     weapon: Joi.string().max(64),
     avatar: Joi.string(),
+    delAvatar: Joi.string(),
     images: Joi.array().items(Joi.string()),
+    delImages: Joi.array().items(Joi.string()),
   });
   return schema.validate(data);
 };
