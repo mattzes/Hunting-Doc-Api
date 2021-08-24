@@ -4,9 +4,9 @@ const config = require('../config');
 const path = require('path');
 require('dotenv');
 
-// * Specifie the upload path for images
+// * Specify the upload path for images
 const shootingImageStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
+  destination: (req, file, cb) => {
     try {
       let dir = path.join(process.env.ABSOLUTE_FILE_PATH_TMP, req.user._id.toString());
       if (!fs.existsSync(dir)) fs.mkdirSync(dir);
@@ -15,7 +15,7 @@ const shootingImageStorage = multer.diskStorage({
       cb({ status: 500, msg: 'failed to store image in destination' });
     }
   },
-  filename: function (req, file, cb) {
+  filename: (req, file, cb) => {
     let filetype = file.originalname.split('.');
     let filename = Date.now().toString() + '.' + filetype[filetype.length - 1];
     switch (file.fieldname) {
