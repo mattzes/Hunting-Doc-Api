@@ -43,14 +43,14 @@ db.on('reconnected', function () {
 });
 db.on('disconnected', function () {
   console.log('MongoDB disconnected!');
-  mongoose.connect(process.env.DB_CONNECTION_DEV, {
+  mongoose.connect(process.env.DB_CONNECTION, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useFindAndModify: false,
   });
 });
 
-mongoose.connect(process.env.DB_CONNECTION_DEV, {
+mongoose.connect(process.env.DB_CONNECTION, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useFindAndModify: false,
