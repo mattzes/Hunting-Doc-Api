@@ -25,23 +25,23 @@ app.use(clientError);
 // * Connect to DB
 const db = mongoose.connection;
 
-db.on('connecting', function () {
+db.on('connecting', () => {
   console.log('connecting to MongoDB...');
 });
-db.on('error', function (error) {
+db.on('error', error => {
   console.error('Error in MongoDb connection: ' + error);
   mongoose.disconnect();
 });
-db.on('connected', function () {
+db.on('connected', () => {
   console.log('MongoDB connected!');
 });
-db.once('open', function () {
+db.once('open', () => {
   console.log('MongoDB connection opened!');
 });
-db.on('reconnected', function () {
+db.on('reconnected', () => {
   console.log('MongoDB reconnected!');
 });
-db.on('disconnected', function () {
+db.on('disconnected', () => {
   console.log('MongoDB disconnected!');
   mongoose.connect(process.env.DB_CONNECTION_DEV, {
     useNewUrlParser: true,
