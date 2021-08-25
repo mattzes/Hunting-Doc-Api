@@ -1,4 +1,4 @@
-const config = require('../config');
+const config = require('../../config');
 const Joi = require('joi');
 Joi.objectID = require('joi-objectid')(Joi);
 
