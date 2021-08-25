@@ -4,8 +4,8 @@
   "description": "Documentary tool for hunters",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
-    "server": "nodemon app.js"
+    "start": "node src/app.js",
+    "server": "nodemon src/app.js"
   },
   "author": "piefke_kr",
   "license": "ISC",
