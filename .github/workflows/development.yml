@@ -28,4 +28,4 @@ jobs:
         run: cp build/* ${{secrets.TARGET_DIR}}
 
       - name: Restart service
-        run: pm2 restart hunting-doc-api
+        run: pm2 restart dev-hunting-doc-api
