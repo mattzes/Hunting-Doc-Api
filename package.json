@@ -4,8 +4,8 @@
   "description": "Documentary tool for hunters",
   "main": "app.js",
   "scripts": {
-    "start": "node src/app.js",
-    "server": "nodemon src/app.js"
+    "start": "nodemon src/app.js",
+    "build": "webpack"
   },
   "author": "piefke_kr",
   "license": "ISC",
@@ -21,9 +21,12 @@
     "joi-objectid": "^3.0.1",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.12.3",
-    "multer": "^1.4.2"
+    "multer": "^1.4.2",
+    "webpack": "^5.51.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.12"
+    "nodemon": "^2.0.12",
+    "webpack-cli": "^4.8.0",
+    "webpack-node-externals": "^3.0.0"
   }
 }
