@@ -1,8 +1,8 @@
-name: HuntingDoc-api dev CI
+name: HuntingDoc-api prod CI
 
 on:
   push:
-    branches: [development]
+    branches: [master]
 
 jobs:
   build_and_deploy:
@@ -25,7 +25,7 @@ jobs:
         run: npm run build
 
       - name: Copy build in Target
-        run: cp build/* ${{secrets.TARGET_DIR_DEV}}
+        run: cp build/* ${{secrets.TARGET_DIR_PROD}}
 
       - name: Restart service
-        run: pm2 restart dev-hunting-doc-api
+        run: pm2 restart hunting-doc-api
