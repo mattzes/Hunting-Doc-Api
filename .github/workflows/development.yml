@@ -5,7 +5,7 @@ on:
     branches: [development]
 
 jobs:
-  build and deploy:
+  build_and_deploy:
     runs-on: self-hosted
 
     strategy:
