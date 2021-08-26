@@ -4,3 +4,4 @@ node_modules
 *.rest
 images
 tmp
+build
