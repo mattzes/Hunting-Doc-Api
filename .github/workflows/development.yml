@@ -25,7 +25,8 @@ jobs:
         run: npm run build
 
       - name: Copy build in Target
-        run: cp build/* ${{secrets.TARGET_DIR_DEV}}
+        run: cp -r build ${{secrets.TARGET_DIR_DEV}}
+        run: cp -r node_modules ${{secrets.TARGET_DIR_DEV}}
 
       - name: Restart service
         run: pm2 restart dev-hunting-doc-api
