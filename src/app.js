@@ -8,6 +8,7 @@ const { clientError } = require('./handler/error');
 require('dotenv/config');
 
 // * Import Routes
+const statusRoute = require('./routes/status');
 const authRoute = require('./routes/auth');
 const shootingRoute = require('./routes/shooting');
 const shootingFilesRoute = require('./routes/shootingFiles');
@@ -17,6 +18,7 @@ app.use(cors(config().corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use('/api/status', statusRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/shooting', shootingRoute);
 app.use('/shooting', shootingFilesRoute);
