@@ -1,16 +1,26 @@
 require('dotenv');
-const config = {
-  // Cors options
-  // view all options at https://expressjs.com/en/resources/middleware/cors.html#configuration-options
-  corsOptions: {
-    origin: process.env.HOST,
-    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-  },
 
-  // Define wich files are allowed as RegEx pattern
-  allowedFileTypes: /(.png|.jpg|.jpeg|.JPG)$/,
+const config = () => {
+  let origin;
+  if (process.env.MODE == 'development') {
+    origin = ['http://localhost:3000', process.env.ORIGIN];
+  } else if (process.env.MODE == 'productive') {
+    origin = process.env.ORIGIN;
+  }
+  return {
+    // Cors options
+    // view all options at https://expressjs.com/en/resources/middleware/cors.html#configuration-options
+    corsOptions: {
+      origin: origin,
+      methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+      credentials: true,
+    },
 
-  // Define max size of files in bytes
-  shootingFileSize: 10485760, // 10485760 are 10Mb
+    // Define wich files are allowed as RegEx pattern
+    allowedFileTypes: /(.png|.jpg|.jpeg|.JPG)$/,
+
+    // Define max size of files in bytes
+    shootingFileSize: 10485760, // 10485760 are 10Mb
+  };
 };
 module.exports = config;
