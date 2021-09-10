@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { verifyRefreshToken } = require('../handler/verify');
 const { registerValidation, loginValidation } = require('../validations/user');
+require('dotenv/config');
 
 //Create a jwt access token
 const createAccessToken = user => {
@@ -115,13 +116,13 @@ router.post('/login', async (req, res, next) => {
   res
     .cookie('refresh_token', refresh_token, {
       httpOnly: true,
-      //secure: true, // TODO: enable secure for https only
+      secure: process.env.SECURE_COOKIE,
       domain: process.env.DOMAIN,
       path: '/api/auth',
     })
     .cookie('access_token', access_token, {
       httpOnly: true,
-      //secure: true, // TODO: enable secure for https only
+      secure: process.env.SECURE_COOKIE,
       domain: process.env.DOMAIN,
       expires: new Date(Date.now() + 899700),
     })
@@ -160,13 +161,13 @@ router.post('/refresh_token', verifyRefreshToken, async (req, res, next) => {
   res
     .cookie('refresh_token', refresh_token, {
       httpOnly: true,
-      //secure: true, // TODO: enable secure for https only
+      secure: process.env.SECURE_COOKIE,
       domain: process.env.DOMAIN,
       path: '/api/auth',
     })
     .cookie('access_token', access_token, {
       httpOnly: true,
-      //secure: true, // TODO: enable secure for https only
+      secure: process.env.SECURE_COOKIE,
       domain: process.env.DOMAIN,
       expires: new Date(Date.now() + 899700),
     })
