@@ -13,7 +13,7 @@ const shootingRoute = require('./routes/shooting');
 const shootingFilesRoute = require('./routes/shootingFiles');
 
 // * Middleware
-app.use(cors(config.corsOptions));
+app.use(cors(config().corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
