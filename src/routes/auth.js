@@ -3,7 +3,7 @@ const router = express.Router();
 const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { verifyRefreshToken } = require('../handler/verify');
+const { verifyRefreshToken, verifyAccessToken } = require('../handler/verify');
 const { registerValidation, loginValidation } = require('../validations/user');
 require('dotenv/config');
 
@@ -17,9 +17,16 @@ const createAccessToken = user => {
 
 //Create a jwt refresh token
 const createRefreshToken = user => {
-  const refresh_token = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
-    expiresIn: '30d',
-  });
+  let refresh_token;
+  if (user.remindMe) {
+    refresh_token = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
+      expiresIn: '178d',
+    });
+  } else {
+    refresh_token = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
+      expiresIn: '1d',
+    });
+  }
   return refresh_token;
 };
 
@@ -49,7 +56,7 @@ router.post('/register', async (req, res, next) => {
   //save the user to db
   try {
     const savedUser = await user.save();
-    res.status(201).json({ ok: true });
+    res.status(201).end();
   } catch (error) {
     return next({ status: 500, msg: 'Error while save data to DB' });
   }
@@ -71,12 +78,10 @@ router.post('/login', async (req, res, next) => {
 
   //Create tokens
   let userJSON = user.toJSON();
+  userJSON.remindMe = value.remindMe;
   ['refresh_tokens', 'password', '__v'].forEach(e => delete userJSON[e]);
   const refresh_token = createRefreshToken(userJSON);
   const access_token = createAccessToken(userJSON);
-
-  //Check max logins on different devices
-  if (user.refresh_tokens.length >= 10) return next({ status: 403, msg: 'Max logins reached' });
 
   //Push new refresh token to DB
   try {
@@ -86,44 +91,26 @@ router.post('/login', async (req, res, next) => {
     return next({ status: 500, msg: 'Error while save data to DB' });
   }
 
-  //Delete old refresh token if no refresh token isset check all tokens in dp if expired
-  const { cookies } = req;
-  if (cookies.refresh_token) {
-    try {
-      await user.updateOne({
-        $pull: { refresh_tokens: cookies.refresh_token },
-      });
-    } catch (error) {
-      return next({ status: 500, msg: 'Error while save data to DB' });
-    }
-  } else {
-    for (i = 0; i < user.refresh_tokens.length; i++) {
-      try {
-        const verified = jwt.verify(user.refresh_tokens[i], process.env.REFRESH_TOKEN_SECRET);
-      } catch (error) {
-        try {
-          await user.updateOne({
-            $pull: { refresh_tokens: user.refresh_tokens[i] },
-          });
-        } catch (error_1) {
-          return next({ status: 500, msg: 'Error while save data to DB' });
-        }
-      }
-    }
-  }
-
   //Set cookies
   res
     .cookie('refresh_token', refresh_token, {
       secure: process.env.SECURE_COOKIE,
       domain: process.env.DOMAIN,
     })
-    .cookie('access_token', access_token, {
-      secure: process.env.SECURE_COOKIE,
-      domain: process.env.DOMAIN,
-      expires: new Date(Date.now() + 899700),
-    })
-    .json({ ok: true });
+    .json({ access_token: access_token });
+
+  //Delete expired refresh tokens
+  for (i = 0; i < user.refresh_tokens.length; i++) {
+    try {
+      const verified = jwt.verify(user.refresh_tokens[i], process.env.REFRESH_TOKEN_SECRET);
+    } catch (error) {
+      try {
+        await user.updateOne({
+          $pull: { refresh_tokens: user.refresh_tokens[i] },
+        });
+      } catch (error_1) {}
+    }
+  }
 });
 
 // * Refresh access token with refreh token
@@ -160,16 +147,11 @@ router.post('/refresh_token', verifyRefreshToken, async (req, res, next) => {
       secure: process.env.SECURE_COOKIE,
       domain: process.env.DOMAIN,
     })
-    .cookie('access_token', access_token, {
-      secure: process.env.SECURE_COOKIE,
-      domain: process.env.DOMAIN,
-      expires: new Date(Date.now() + 899700),
-    })
-    .json({ ok: true });
+    .json({ access_token: access_token });
 });
 
 // * Logout
-router.post('/logout', verifyRefreshToken, async (req, res, next) => {
+router.post('/logout', verifyAccessToken, async (req, res, next) => {
   //Delete refreh token in DB
   const user = await User.findById(req.user._id);
   try {
@@ -183,26 +165,27 @@ router.post('/logout', verifyRefreshToken, async (req, res, next) => {
   //Set cookies wich expires instantly
   res
     .cookie('refresh_token', '', { expires: new Date(Date.now()) })
-    .cookie('access_token', '', { expires: new Date(Date.now()) })
-    .json({ ok: true });
+    .status(200)
+    .end();
 });
 
 // * Force logout
-router.delete('/force_logout', verifyRefreshToken, async (req, res, next) => {
+router.delete('/force_logout', verifyAccessToken, async (req, res, next) => {
   //Delete all refreh tokens in DB
   const user = await User.findById(req.user._id);
   try {
     await user.updateOne({
       $set: { refresh_tokens: [] },
     });
-  } catch (error_1) {
+  } catch (error) {
     return next({ status: 500, msg: 'Error while save data to DB' });
   }
 
   //Set cookies wich expires instantly
   res
     .cookie('refresh_token', '', { expires: new Date(Date.now()) })
-    .cookie('access_token', '', { expires: new Date(Date.now()) })
-    .json({ ok: true });
+    .status(200)
+    .end();
 });
+
 module.exports = router;

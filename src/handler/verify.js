@@ -2,8 +2,11 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
 const verifyAccessToken = (req, res, next) => {
-  const { cookies } = req;
-  const access_token = cookies.access_token;
+  const authorization = req.headers.authorization.split(' ');
+  const access_token = authorization[1];
+  const bearer = authorization[0];
+
+  if (bearer != 'Bearer') return next({ status: 403, msg: 'invalid authorization header' });
   if (!access_token) return next({ status: 403, msg: 'no access token' });
   try {
     const verified = jwt.verify(access_token, process.env.ACCESS_TOKEN_SECRET);
