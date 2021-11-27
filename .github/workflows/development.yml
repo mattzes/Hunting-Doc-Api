@@ -28,6 +28,3 @@ jobs:
         run: |
           cp -r build ${{secrets.TARGET_DIR_DEV}}
           cp -r node_modules ${{secrets.TARGET_DIR_DEV}}
-
-      - name: Restart service
-        run: pm2 restart dev-hunting-doc-api
