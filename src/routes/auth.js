@@ -29,7 +29,7 @@ const createRefreshToken = user => {
       token: jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
         expiresIn: '1d',
       }),
-      expiresIn: 860400000, //23.9 hours in milliseconds
+      expiresIn: 86040000, //23.9 hours in milliseconds
     };
   }
 };
