@@ -3,7 +3,6 @@ const app = express();
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-const config = require('../config');
 const { clientError } = require('./handler/error');
 require('dotenv/config');
 
@@ -14,7 +13,14 @@ const shootingRoute = require('./routes/shooting');
 const shootingFilesRoute = require('./routes/shootingFiles');
 
 // * Middleware
-app.use(cors(config().corsOptions));
+app.use(
+  // view all options at https://expressjs.com/en/resources/middleware/cors.html#configuration-options
+  cors({
+    origin: process.env.ORIGIN,
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTION'],
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
