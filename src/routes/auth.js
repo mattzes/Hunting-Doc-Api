@@ -94,10 +94,13 @@ router.post('/login', async (req, res, next) => {
   //Set cookies
   res
     .cookie('refresh_token', refresh_token, {
+      httpOnly: true,
+      path: '/api/auth/refresh_token',
       secure: process.env.SECURE_COOKIE,
       domain: process.env.DOMAIN,
+      maxAge: refreshExpires,
     })
-    .json({ access_token: access_token });
+    .json({ access_token: access_token, expires: accessExpires });
 
   //Delete expired refresh tokens
   for (i = 0; i < user.refresh_tokens.length; i++) {
@@ -144,10 +147,14 @@ router.post('/refresh_token', verifyRefreshToken, async (req, res, next) => {
   //Set cookies
   res
     .cookie('refresh_token', refresh_token, {
+      httpOnly: true,
+      path: '/api/auth/refresh_token',
       secure: process.env.SECURE_COOKIE,
       domain: process.env.DOMAIN,
+      maxAge: refreshExpires,
     })
-    .json({ access_token: access_token });
+    .status(200)
+    .json({ access_token: access_token, expires: accessExpires });
 });
 
 // * Logout
