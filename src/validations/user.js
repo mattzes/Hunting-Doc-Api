@@ -25,7 +25,7 @@ const loginValidation = data => {
       .max(32)
       .required()
       .pattern(new RegExp(/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[*.!@$%^&(){}[\]:#;<>,.?\/~_+\-=|]).{8,32}$/)),
-    remindMe: Joi.boolean(),
+    rememberMe: Joi.boolean(),
   });
   return schema.validate(data);
 };

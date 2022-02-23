@@ -18,7 +18,7 @@ const createAccessToken = user => {
 //Create a jwt refresh token
 const createRefreshToken = user => {
   let refresh_token;
-  if (user.remindMe) {
+  if (user.rememberMe) {
     refresh_token = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
       expiresIn: '178d',
     });
@@ -78,7 +78,7 @@ router.post('/login', async (req, res, next) => {
 
   //Create tokens
   let userJSON = user.toJSON();
-  userJSON.remindMe = value.remindMe;
+  userJSON.rememberMe = value.rememberMe;
   ['refresh_tokens', 'password', '__v'].forEach(e => delete userJSON[e]);
   const refresh_token = createRefreshToken(userJSON);
   const access_token = createAccessToken(userJSON);
