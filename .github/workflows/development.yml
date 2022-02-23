@@ -10,7 +10,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version: [16.x]
 
     steps:
       - uses: actions/checkout@v2
@@ -19,15 +19,20 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
       - name: Install dependencies
-        run: npm install
+        run: |
+          cd server
+          npm install
+          cd ..
 
       - name: Build
-        run: npm run build
+        run: |
+          cd server
+          npm run build
+          cd ..
 
       - name: Copy build in Target
         run: |
+          cd server
           cp -r build ${{secrets.TARGET_DIR_DEV}}
           cp -r node_modules ${{secrets.TARGET_DIR_DEV}}
-
-      - name: Restart service
-        run: pm2 restart dev-hunting-doc-api
+          cd ..
