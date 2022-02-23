@@ -22,14 +22,14 @@ const createRefreshToken = user => {
       refresh_token: jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
         expiresIn: '178d',
       }),
-      expiresIn: '177d',
+      expiresIn: 15292800000, //177 days in milliseconds
     };
   } else {
     return {
       refresh_token: jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
         expiresIn: '1d',
       }),
-      expiresIn: '23h',
+      expiresIn: 860400000, //23.9 hours in milliseconds
     };
   }
 };
@@ -155,7 +155,7 @@ router.post('/refresh_token', verifyRefreshToken, async (req, res, next) => {
       path: '/api/auth/refresh_token',
       secure: process.env.SECURE_COOKIE,
       domain: process.env.DOMAIN,
-      maxAge: refreshExpires,
+      maxAge: refresh_token.expiresIn,
     })
     .status(200)
     .json({ access_token: access_token, expires: accessExpires });
