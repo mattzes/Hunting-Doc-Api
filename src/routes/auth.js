@@ -17,17 +17,21 @@ const createAccessToken = user => {
 
 //Create a jwt refresh token
 const createRefreshToken = user => {
-  let refresh_token;
   if (user.rememberMe) {
-    refresh_token = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
-      expiresIn: '178d',
-    });
+    return {
+      refresh_token: jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
+        expiresIn: '178d',
+      }),
+      expiresIn: '177d',
+    };
   } else {
-    refresh_token = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
-      expiresIn: '1d',
-    });
+    return {
+      refresh_token: jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
+        expiresIn: '1d',
+      }),
+      expiresIn: '23h',
+    };
   }
-  return refresh_token;
 };
 
 // * Register User incl. validation
@@ -98,9 +102,9 @@ router.post('/login', async (req, res, next) => {
       path: '/api/auth/refresh_token',
       secure: process.env.SECURE_COOKIE,
       domain: process.env.DOMAIN,
-      maxAge: refreshExpires,
+      maxAge: refresh_token.expiresIn,
     })
-    .json({ access_token: access_token, expires: accessExpires });
+    .json({ access_token: access_token });
 
   //Delete expired refresh tokens
   for (i = 0; i < user.refresh_tokens.length; i++) {
