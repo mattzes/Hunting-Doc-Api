@@ -14,7 +14,8 @@ jobs:
         node-version: [14.x, 16.x]
 
     steps:
-        run: cd server
+      - name: Change working-directory
+        working-directory: ./server
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
@@ -30,4 +31,3 @@ jobs:
         run: |
           cp -r build ${{secrets.TARGET_DIR_DEV}}
           cp -r node_modules ${{secrets.TARGET_DIR_DEV}}
-        run: cd ..
