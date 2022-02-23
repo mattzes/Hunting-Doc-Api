@@ -5,12 +5,13 @@ on:
     branches: [development]
 
 jobs:
-  build_and_deploy:
+  api:
+    name: API
     runs-on: self-hosted
 
     strategy:
       matrix:
-        node-version: [16.x]
+        node-version: [14.x]
 
     steps:
       - uses: actions/checkout@v2
@@ -22,17 +23,11 @@ jobs:
         run: |
           cd server
           npm install
-          cd ..
 
       - name: Build
-        run: |
-          cd server
-          npm run build
-          cd ..
+        run: npm run build
 
       - name: Copy build in Target
         run: |
-          cd server
           cp -r build ${{secrets.TARGET_DIR_DEV}}
           cp -r node_modules ${{secrets.TARGET_DIR_DEV}}
-          cd ..
