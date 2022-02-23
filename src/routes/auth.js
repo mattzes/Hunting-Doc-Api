@@ -70,11 +70,11 @@ router.post('/login', async (req, res, next) => {
 
   //Check if the user exists
   const user = await User.findOne({ username: value.username });
-  if (!user) return next({ status: 400, msg: 'The username or password is wrong.' });
+  if (!user) return next({ status: 403, msg: 'The username or password is wrong.' });
 
   //Check if the password ist correct
   const validPass = await bcrypt.compare(value.password, user.password);
-  if (!validPass) return next({ status: 400, msg: 'The username or password is wrong.' });
+  if (!validPass) return next({ status: 403, msg: 'The username or password is wrong.' });
 
   //Create tokens
   let userJSON = user.toJSON();
