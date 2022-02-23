@@ -125,6 +125,8 @@ router.get('/data', verifyAccessToken, async (req, res, next) => {
   try {
     let shooting = await Shooting.findOne({ _id: req.body._id, user_id: req.user._id });
     if (shooting) {
+      shooting.user_id = undefined;
+      delete shooting.user_id;
       res.send(shooting);
     } else {
       return next({ status: 406, msg: 'No Shooting with ID: ' + req.body._id + 'found' });
@@ -144,6 +146,10 @@ router.get('/data/all', verifyAccessToken, async (req, res, next) => {
   try {
     let shootings = await Shooting.find({ user_id: value._id });
     if (shootings.length != 0) {
+      shootings.forEach(shooting => {
+        shooting.user_id = undefined;
+        delete shooting.user_id;
+      });
       res.send(shootings);
     } else {
       return next({ status: 406, msg: 'No shootings found for user ID: ' + req.user._id });
