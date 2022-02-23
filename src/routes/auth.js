@@ -17,17 +17,21 @@ const createAccessToken = user => {
 
 //Create a jwt refresh token
 const createRefreshToken = user => {
-  let refresh_token;
-  if (user.remindMe) {
-    refresh_token = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
-      expiresIn: '178d',
-    });
+  if (user.rememberMe) {
+    return {
+      refresh_token: jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
+        expiresIn: '178d',
+      }),
+      expiresIn: '177d',
+    };
   } else {
-    refresh_token = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
-      expiresIn: '1d',
-    });
+    return {
+      refresh_token: jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
+        expiresIn: '1d',
+      }),
+      expiresIn: '23h',
+    };
   }
-  return refresh_token;
 };
 
 // * Register User incl. validation
@@ -70,15 +74,15 @@ router.post('/login', async (req, res, next) => {
 
   //Check if the user exists
   const user = await User.findOne({ username: value.username });
-  if (!user) return next({ status: 400, msg: 'The username or password is wrong.' });
+  if (!user) return next({ status: 403, msg: 'The username or password is wrong.' });
 
   //Check if the password ist correct
   const validPass = await bcrypt.compare(value.password, user.password);
-  if (!validPass) return next({ status: 400, msg: 'The username or password is wrong.' });
+  if (!validPass) return next({ status: 403, msg: 'The username or password is wrong.' });
 
   //Create tokens
   let userJSON = user.toJSON();
-  userJSON.remindMe = value.remindMe;
+  userJSON.rememberMe = value.rememberMe;
   ['refresh_tokens', 'password', '__v'].forEach(e => delete userJSON[e]);
   const refresh_token = createRefreshToken(userJSON);
   const access_token = createAccessToken(userJSON);
@@ -94,8 +98,11 @@ router.post('/login', async (req, res, next) => {
   //Set cookies
   res
     .cookie('refresh_token', refresh_token, {
+      httpOnly: true,
+      path: '/api/auth/refresh_token',
       secure: process.env.SECURE_COOKIE,
       domain: process.env.DOMAIN,
+      maxAge: refresh_token.expiresIn,
     })
     .json({ access_token: access_token });
 
@@ -144,10 +151,14 @@ router.post('/refresh_token', verifyRefreshToken, async (req, res, next) => {
   //Set cookies
   res
     .cookie('refresh_token', refresh_token, {
+      httpOnly: true,
+      path: '/api/auth/refresh_token',
       secure: process.env.SECURE_COOKIE,
       domain: process.env.DOMAIN,
+      maxAge: refreshExpires,
     })
-    .json({ access_token: access_token });
+    .status(200)
+    .json({ access_token: access_token, expires: accessExpires });
 });
 
 // * Logout
