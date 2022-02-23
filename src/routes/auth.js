@@ -19,14 +19,14 @@ const createAccessToken = user => {
 const createRefreshToken = user => {
   if (user.rememberMe) {
     return {
-      refresh_token: jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
+      token: jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
         expiresIn: '178d',
       }),
       expiresIn: 15292800000, //177 days in milliseconds
     };
   } else {
     return {
-      refresh_token: jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
+      token: jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, {
         expiresIn: '1d',
       }),
       expiresIn: 860400000, //23.9 hours in milliseconds
@@ -89,7 +89,7 @@ router.post('/login', async (req, res, next) => {
 
   //Push new refresh token to DB
   try {
-    user.refresh_tokens.push(refresh_token);
+    user.refresh_tokens.push(refresh_token.token);
     user.save();
   } catch (error) {
     return next({ status: 500, msg: 'Error while save data to DB' });
@@ -97,7 +97,7 @@ router.post('/login', async (req, res, next) => {
 
   //Set cookies
   res
-    .cookie('refresh_token', refresh_token, {
+    .cookie('refresh_token', refresh_token.token, {
       httpOnly: true,
       path: '/api/auth/refresh_token',
       secure: process.env.SECURE_COOKIE,
@@ -133,7 +133,7 @@ router.post('/refresh_token', verifyRefreshToken, async (req, res, next) => {
 
   //Push new refresh token to DB
   try {
-    user.refresh_tokens.push(refresh_token);
+    user.refresh_tokens.push(refresh_token.token);
     user.save();
   } catch (error) {
     return next({ status: 500, msg: 'Error while save data to DB' });
@@ -150,7 +150,7 @@ router.post('/refresh_token', verifyRefreshToken, async (req, res, next) => {
 
   //Set cookies
   res
-    .cookie('refresh_token', refresh_token, {
+    .cookie('refresh_token', refresh_token.token, {
       httpOnly: true,
       path: '/api/auth/refresh_token',
       secure: process.env.SECURE_COOKIE,
