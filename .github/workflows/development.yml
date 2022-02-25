@@ -26,5 +26,5 @@ jobs:
 
       - name: Copy build in Target
         run: |
-          cp -r build ${{secrets.TARGET_DIR_DEV}}/server
-          cp -r node_modules ${{secrets.TARGET_DIR_DEV}}/server
+          cp -r build ${{secrets.TARGET_DIR_DEV}}
+          cp -r node_modules ${{secrets.TARGET_DIR_DEV}}
