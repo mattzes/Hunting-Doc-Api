@@ -142,7 +142,7 @@ router.post('/refresh-token', verifyRefreshToken, async (req, res, next) => {
   //Delete old refresh token in DB
   try {
     await user.updateOne({
-      $pull: { refreshTokens: current_refreshToken },
+      $pull: { refreshTokens: currentRefreshToken },
     });
   } catch (error) {
     return next({ status: 500, msg: 'Error while save data to DB' });
@@ -175,7 +175,7 @@ router.post('/logout', verifyAccessToken, async (req, res, next) => {
 
   //Set cookies wich expires instantly
   res
-    .cookie('refreshToken', '', { expires: new Date(Date.now()) })
+    .cookie('refresh-token', '', { expires: new Date(Date.now()) })
     .status(200)
     .end();
 });
