@@ -97,7 +97,7 @@ router.post('/login', async (req, res, next) => {
 
   //Set cookies
   res
-    .cookie('refresh_token', refreshToken.token, {
+    .cookie('refresh-token', refreshToken.token, {
       httpOnly: true,
       path: '/api/auth/refresh_token',
       secure: process.env.SECURE_COOKIE,
@@ -150,7 +150,7 @@ router.post('/refresh_token', verifyRefreshToken, async (req, res, next) => {
 
   //Set cookies
   res
-    .cookie('refresh_token', refreshToken.token, {
+    .cookie('refresh-token', refreshToken.token, {
       httpOnly: true,
       path: '/api/auth/refresh_token',
       secure: process.env.SECURE_COOKIE,
@@ -194,7 +194,7 @@ router.delete('/force_logout', verifyAccessToken, async (req, res, next) => {
 
   //Set cookies wich expires instantly
   res
-    .cookie('refresh_token', '', { expires: new Date(Date.now()) })
+    .cookie('refresh-token', '', { expires: new Date(Date.now()) })
     .status(200)
     .end();
 });
