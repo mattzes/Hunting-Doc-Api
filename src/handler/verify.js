@@ -10,7 +10,7 @@ const verifyAccessToken = (req, res, next) => {
     req.user = verified;
     next();
   } catch (error) {
-    return next({ status: 401, msg: 'invalid access token' });
+    return next({ status: 401, msg: error.message });
   }
 };
 
@@ -30,7 +30,7 @@ const verifyRefreshToken = async (req, res, next) => {
     }
     next();
   } catch (error) {
-    return next({ status: 401, msg: 'invalid refresh token' });
+    return next({ status: 401, msg: error.message });
   }
 };
 
