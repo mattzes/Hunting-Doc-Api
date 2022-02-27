@@ -4,13 +4,13 @@ const User = require('../models/user');
 const verifyAccessToken = (req, res, next) => {
   const accessToken = req.headers.x - access - token;
 
-  if (!accessToken) return next({ status: 403, msg: 'no access token' });
+  if (!accessToken) return next({ status: 401, msg: 'no access token' });
   try {
     const verified = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
     req.user = verified;
     next();
   } catch (error) {
-    return next({ status: 403, msg: 'invalid access token' });
+    return next({ status: 401, msg: 'invalid access token' });
   }
 };
 
@@ -30,7 +30,7 @@ const verifyRefreshToken = async (req, res, next) => {
     }
     next();
   } catch (error) {
-    return next({ status: 403, msg: 'invalid refresh token' });
+    return next({ status: 401, msg: 'invalid refresh token' });
   }
 };
 
