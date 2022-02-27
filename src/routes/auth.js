@@ -99,7 +99,7 @@ router.post('/login', async (req, res, next) => {
   res
     .cookie('refresh-token', refreshToken.token, {
       httpOnly: true,
-      path: '/api/auth/refresh_token',
+      path: '/api/auth/refresh-token',
       secure: process.env.SECURE_COOKIE,
       domain: process.env.DOMAIN,
       maxAge: refreshToken.expiresIn,
@@ -121,7 +121,7 @@ router.post('/login', async (req, res, next) => {
 });
 
 // * Refresh access token with refreh token
-router.post('/refresh_token', verifyRefreshToken, async (req, res, next) => {
+router.post('/refresh-token', verifyRefreshToken, async (req, res, next) => {
   //Find user
   const user = await User.findById(req.user._id);
 
@@ -152,7 +152,7 @@ router.post('/refresh_token', verifyRefreshToken, async (req, res, next) => {
   res
     .cookie('refresh-token', refreshToken.token, {
       httpOnly: true,
-      path: '/api/auth/refresh_token',
+      path: '/api/auth/refresh-token',
       secure: process.env.SECURE_COOKIE,
       domain: process.env.DOMAIN,
       maxAge: refreshToken.expiresIn,
@@ -181,7 +181,7 @@ router.post('/logout', verifyAccessToken, async (req, res, next) => {
 });
 
 // * Force logout
-router.delete('/force_logout', verifyAccessToken, async (req, res, next) => {
+router.delete('/force-logout', verifyAccessToken, async (req, res, next) => {
   //Delete all refreh tokens in DB
   const user = await User.findById(req.user._id);
   try {
