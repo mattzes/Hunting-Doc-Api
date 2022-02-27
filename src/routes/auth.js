@@ -172,10 +172,7 @@ router.post('/logout', verifyAccessToken, async (req, res, next) => {
   }
 
   //Set cookies wich expires instantly
-  res
-    .cookie('refresh-token', '', { expires: new Date(Date.now()) })
-    .status(200)
-    .end();
+  res.cookie('refresh-token', '', getCookieSettings(0)).status(200).end();
 });
 
 // * Force logout
