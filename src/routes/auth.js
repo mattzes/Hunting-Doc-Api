@@ -158,7 +158,7 @@ router.post('/refresh_token', verifyRefreshToken, async (req, res, next) => {
       maxAge: refresh_token.expiresIn,
     })
     .status(200)
-    .json({ access_token: access_token, expires: accessExpires });
+    .json({ access_token: access_token });
 });
 
 // * Logout
