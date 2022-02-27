@@ -16,7 +16,7 @@ const verifyAccessToken = (req, res, next) => {
 
 const verifyRefreshToken = async (req, res, next) => {
   const { cookies } = req;
-  const refreshToken = cookies.refreshToken;
+  const refreshToken = cookies['refresh-token'];
   if (!refreshToken) return next({ status: 401, msg: 'no refresh token' });
   try {
     const verified = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
