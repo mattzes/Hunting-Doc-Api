@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
 const verifyAccessToken = (req, res, next) => {
-  const accessToken = req.headers.x - access - token;
+  const accessToken = req.headers['x-access-token'];
 
   if (!accessToken) return next({ status: 401, msg: 'no access token' });
   try {
