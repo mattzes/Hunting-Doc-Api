@@ -34,6 +34,16 @@ const createRefreshToken = user => {
   }
 };
 
+const getCookieSettings = expiresIn => {
+  return {
+    httpOnly: true,
+    path: '/api/auth/refresh-token',
+    secure: process.env.SECURE_COOKIE,
+    domain: process.env.DOMAIN,
+    maxAge: expiresIn,
+  };
+};
+
 // * Register User incl. validation
 router.post('/register', async (req, res, next) => {
   //Validate the data
@@ -97,13 +107,7 @@ router.post('/login', async (req, res, next) => {
 
   //Set cookies
   res
-    .cookie('refresh-token', refreshToken.token, {
-      httpOnly: true,
-      path: '/api/auth/refresh-token',
-      secure: process.env.SECURE_COOKIE,
-      domain: process.env.DOMAIN,
-      maxAge: refreshToken.expiresIn,
-    })
+    .cookie('refresh-token', refreshToken.token, getCookieSettings(refreshToken.expiresIn))
     .json({ accessToken: accessToken });
 
   //Delete expired refresh tokens
@@ -150,13 +154,7 @@ router.post('/refresh-token', verifyRefreshToken, async (req, res, next) => {
 
   //Set cookies
   res
-    .cookie('refresh-token', refreshToken.token, {
-      httpOnly: true,
-      path: '/api/auth/refresh-token',
-      secure: process.env.SECURE_COOKIE,
-      domain: process.env.DOMAIN,
-      maxAge: refreshToken.expiresIn,
-    })
+    .cookie('refresh-token', refreshToken.token, getCookieSettings(refreshToken.expiresIn))
     .status(200)
     .json({ accessToken: accessToken });
 });
