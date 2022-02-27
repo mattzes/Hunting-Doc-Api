@@ -9,10 +9,10 @@ require('dotenv/config');
 
 //Create a jwt access token
 const createAccessToken = user => {
-  const access_token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+  const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
     expiresIn: '15min',
   });
-  return access_token;
+  return accessToken;
 };
 
 //Create a jwt refresh token
@@ -83,13 +83,13 @@ router.post('/login', async (req, res, next) => {
   //Create tokens
   let userJSON = user.toJSON();
   userJSON.rememberMe = value.rememberMe;
-  ['refresh_tokens', 'password', '__v'].forEach(e => delete userJSON[e]);
-  const refresh_token = createRefreshToken(userJSON);
-  const access_token = createAccessToken(userJSON);
+  ['refreshTokens', 'password', '__v'].forEach(e => delete userJSON[e]);
+  const refreshToken = createRefreshToken(userJSON);
+  const accessToken = createAccessToken(userJSON);
 
   //Push new refresh token to DB
   try {
-    user.refresh_tokens.push(refresh_token.token);
+    user.refreshTokens.push(refreshToken.token);
     user.save();
   } catch (error) {
     return next({ status: 500, msg: 'Error while save data to DB' });
@@ -97,23 +97,23 @@ router.post('/login', async (req, res, next) => {
 
   //Set cookies
   res
-    .cookie('refresh_token', refresh_token.token, {
+    .cookie('refresh_token', refreshToken.token, {
       httpOnly: true,
       path: '/api/auth/refresh_token',
       secure: process.env.SECURE_COOKIE,
       domain: process.env.DOMAIN,
-      maxAge: refresh_token.expiresIn,
+      maxAge: refreshToken.expiresIn,
     })
-    .json({ access_token: access_token });
+    .json({ accessToken: accessToken });
 
   //Delete expired refresh tokens
-  for (i = 0; i < user.refresh_tokens.length; i++) {
+  for (i = 0; i < user.refreshTokens.length; i++) {
     try {
-      const verified = jwt.verify(user.refresh_tokens[i], process.env.REFRESH_TOKEN_SECRET);
+      const verified = jwt.verify(user.refreshTokens[i], process.env.REFRESH_TOKEN_SECRET);
     } catch (error) {
       try {
         await user.updateOne({
-          $pull: { refresh_tokens: user.refresh_tokens[i] },
+          $pull: { refreshTokens: user.refreshTokens[i] },
         });
       } catch (error_1) {}
     }
@@ -126,14 +126,14 @@ router.post('/refresh_token', verifyRefreshToken, async (req, res, next) => {
   const user = await User.findById(req.user._id);
 
   //Create tokens
-  const current_refresh_token = req.user.refresh_token;
-  ['refresh_token', 'iat', 'exp'].forEach(e => delete req.user[e]);
-  const refresh_token = createRefreshToken(req.user);
-  const access_token = createAccessToken(req.user);
+  const currentRefreshToken = req.user.refreshToken;
+  ['refreshToken', 'iat', 'exp'].forEach(e => delete req.user[e]);
+  const refreshToken = createRefreshToken(req.user);
+  const accessToken = createAccessToken(req.user);
 
   //Push new refresh token to DB
   try {
-    user.refresh_tokens.push(refresh_token.token);
+    user.refreshTokens.push(refreshToken.token);
     user.save();
   } catch (error) {
     return next({ status: 500, msg: 'Error while save data to DB' });
@@ -142,7 +142,7 @@ router.post('/refresh_token', verifyRefreshToken, async (req, res, next) => {
   //Delete old refresh token in DB
   try {
     await user.updateOne({
-      $pull: { refresh_tokens: current_refresh_token },
+      $pull: { refreshTokens: current_refreshToken },
     });
   } catch (error) {
     return next({ status: 500, msg: 'Error while save data to DB' });
@@ -150,15 +150,15 @@ router.post('/refresh_token', verifyRefreshToken, async (req, res, next) => {
 
   //Set cookies
   res
-    .cookie('refresh_token', refresh_token.token, {
+    .cookie('refresh_token', refreshToken.token, {
       httpOnly: true,
       path: '/api/auth/refresh_token',
       secure: process.env.SECURE_COOKIE,
       domain: process.env.DOMAIN,
-      maxAge: refresh_token.expiresIn,
+      maxAge: refreshToken.expiresIn,
     })
     .status(200)
-    .json({ access_token: access_token });
+    .json({ accessToken: accessToken });
 });
 
 // * Logout
@@ -167,7 +167,7 @@ router.post('/logout', verifyAccessToken, async (req, res, next) => {
   const user = await User.findById(req.user._id);
   try {
     await user.updateOne({
-      $pull: { refresh_tokens: req.user.refresh_token },
+      $pull: { refreshTokens: req.user.refreshToken },
     });
   } catch (error_1) {
     return next({ status: 500, msg: 'Error while save data to DB' });
@@ -175,7 +175,7 @@ router.post('/logout', verifyAccessToken, async (req, res, next) => {
 
   //Set cookies wich expires instantly
   res
-    .cookie('refresh_token', '', { expires: new Date(Date.now()) })
+    .cookie('refreshToken', '', { expires: new Date(Date.now()) })
     .status(200)
     .end();
 });
@@ -186,7 +186,7 @@ router.delete('/force_logout', verifyAccessToken, async (req, res, next) => {
   const user = await User.findById(req.user._id);
   try {
     await user.updateOne({
-      $set: { refresh_tokens: [] },
+      $set: { refreshTokens: [] },
     });
   } catch (error) {
     return next({ status: 500, msg: 'Error while save data to DB' });

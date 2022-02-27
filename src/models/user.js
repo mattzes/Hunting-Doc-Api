@@ -23,7 +23,7 @@ const UserSchema = mongoose.Schema(
       type: [String],
       default: undefined,
     },
-    refresh_tokens: {
+    refreshTokens: {
       type: [String],
     },
   },

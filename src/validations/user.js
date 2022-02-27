@@ -19,7 +19,7 @@ const registerValidation = data => {
 const loginValidation = data => {
   const schema = Joi.object({
     username: Joi.string().min(6).max(32).alphanum().required(),
-    refresh_tokens: Joi.array().items(Joi.string()),
+    refreshTokens: Joi.array().items(Joi.string()),
     password: Joi.string()
       .min(8)
       .max(32)
