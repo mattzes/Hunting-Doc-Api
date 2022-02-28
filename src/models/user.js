@@ -36,8 +36,10 @@ const UserSchema = mongoose.Schema(
       minLength: 6,
     },
     scopes: {
-      type: [String],
-      default: undefined,
+      isAdmin: {
+        type: Boolean,
+        default: undefined,
+      },
     },
     refreshTokens: {
       type: [String],
