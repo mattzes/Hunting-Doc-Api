@@ -61,10 +61,15 @@ router.post('/register', async (req, res, next) => {
   const hashPassword = await bcrypt.hash(value.password, salt);
 
   //Create a new User
+  const formatName = name => {
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  };
   const user = new User({
     username: value.username,
     password: hashPassword,
-    email: value.email,
+    firstName: formatName(value.firstName),
+    lastName: formatName(value.lastName),
+    initials: (value.firstName.charAt(0) + value.lastName.charAt(0)).toUpperCase(),
   });
 
   //save the user to db
