@@ -198,4 +198,14 @@ router.delete('/force-logout', verifyAccessToken, async (req, res, next) => {
   res.cookie('refresh-token', '', getCookieSettings(0)).status(200).end();
 });
 
+// * Get user information
+router.get('/user', verifyAccessToken, async (req, res, next) => {
+  // find user in DB
+  const user = await User.findById(req.user._id);
+  let userJSON = user.toJSON();
+  ['refreshTokens', 'password'].forEach(e => delete userJSON[e]);
+
+  res.status(200).json({ user: userJSON }).end();
+});
+
 module.exports = router;
