@@ -11,6 +11,9 @@ const registerValidation = data => {
       .pattern(new RegExp(/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[*.!@$%^&(){}[\]:#;<>,.?\/~_+\-=|]).{8,32}$/)),
     email: Joi.string().min(6).required().email(),
     scopes: Joi.array().items(Joi.string().max(16)).max(16),
+    firstName: Joi.string().min(2).max(32).alphanum().required(),
+    lastName: Joi.string().min(2).max(32).alphanum().required(),
+    initials: Joi.string().min(2).max(2).alphanum(),
   });
   return schema.validate(data);
 };
