@@ -67,6 +67,7 @@ router.post('/register', async (req, res, next) => {
   const user = new User({
     username: value.username,
     password: hashPassword,
+    email: value.email.toLowerCase(),
     firstName: formatName(value.firstName),
     lastName: formatName(value.lastName),
     initials: (value.firstName.charAt(0) + value.lastName.charAt(0)).toUpperCase(),
