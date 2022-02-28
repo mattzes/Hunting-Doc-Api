@@ -37,7 +37,7 @@ const createRefreshToken = user => {
 const getCookieSettings = expiresIn => {
   return {
     httpOnly: true,
-    path: '/api/auth/refresh-token',
+    path: '/api/auth',
     secure: process.env.SECURE_COOKIE,
     domain: process.env.DOMAIN,
     maxAge: expiresIn,
@@ -174,7 +174,7 @@ router.post('/logout', verifyAccessToken, async (req, res, next) => {
   const user = await User.findById(req.user._id);
   try {
     await user.updateOne({
-      $pull: { refreshTokens: req.user.refreshToken },
+      $pull: { refreshTokens: req?.cookies['refresh-token'] },
     });
   } catch (error_1) {
     return next({ status: 500, msg: 'Error while save data to DB' });
