@@ -159,11 +159,13 @@ router.post('/refresh-token', verifyRefreshToken, async (req, res, next) => {
     return next({ status: 500, msg: 'Error while save data to DB' });
   }
 
-  //Set cookies
+  //Set cookies and send user data back
+  let userJSON = user.toJSON();
+  ['refreshTokens', 'password'].forEach(e => delete userJSON[e]);
   res
     .cookie('refresh-token', refreshToken.token, getCookieSettings(refreshToken.expiresIn))
     .status(200)
-    .json({ accessToken: accessToken });
+    .json({ accessToken: accessToken, user: userJSON });
 });
 
 // * Logout
