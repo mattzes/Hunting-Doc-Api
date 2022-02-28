@@ -3,7 +3,7 @@ const router = express.Router();
 const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { verifyRefreshToken, verifyAccessToken } = require('../handler/verify');
+const { verifyRefreshToken, verifyAccessToken, verifyAdmin } = require('../handler/verify');
 const { registerValidation, loginValidation } = require('../validations/user');
 require('dotenv/config');
 
@@ -45,7 +45,7 @@ const getCookieSettings = expiresIn => {
 };
 
 // * Register User incl. validation
-router.post('/register', async (req, res, next) => {
+router.post('/register', verifyAccessToken, verifyAdmin, async (req, res, next) => {
   //Validate the data
   const { error, value } = registerValidation(req.body);
   if (error) return next({ status: 400, msg: error.details[0].message });
