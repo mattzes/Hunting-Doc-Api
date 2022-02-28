@@ -34,9 +34,9 @@ const verifyRefreshToken = async (req, res, next) => {
   }
 };
 
-const verifyAdmin = (req, res, next) => {
-  const scopes = req.user.scopes;
-  if (!scopes.includes('admin')) return next({ status: 401, msg: 'Access Denied' });
+const verifyAdmin = async (req, res, next) => {
+  const user = await User.findOne({ _id: req.user._id });
+  if (!user.scopes.includes('admin')) return next({ status: 401, msg: 'Access Denied' });
   next();
 };
 
