@@ -111,7 +111,7 @@ router.post('/login', async (req, res, next) => {
     return next({ status: 500, msg: 'Error while save data to DB' });
   }
 
-  //Set cookies an send user data back
+  //Set cookies and send user data back
   delete userJSON.rememberMe;
   res
     .cookie('refresh-token', refreshToken.token, getCookieSettings(refreshToken.expiresIn))
