@@ -99,7 +99,7 @@ router.post('/login', async (req, res, next) => {
   //Create tokens
   let userJSON = user.toJSON();
   userJSON.rememberMe = value.rememberMe;
-  ['refreshTokens', 'password', '__v'].forEach(e => delete userJSON[e]);
+  ['refreshTokens', 'password'].forEach(e => delete userJSON[e]);
   const refreshToken = createRefreshToken(userJSON);
   const accessToken = createAccessToken(userJSON);
 
